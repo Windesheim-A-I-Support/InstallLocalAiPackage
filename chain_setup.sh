@@ -1,81 +1,54 @@
 #!/bin/bash
-set -e # Exit immediately if a command fails
+set -e
 
-# ==============================================================================
-# MASTER CHAIN INSTALLER
-# Orchestrates: System Dep -> Docker Install -> Repo Clone -> Ultra Node Setup
-# ==============================================================================
+# --- CONFIGURATION ---
+AI_USER="ai-admin"
+# ---------------------
 
-# 1. ROOT CHECK
 if [ "$EUID" -ne 0 ]; then
-  echo "❌ Error: This script must be run as ROOT to start."
+  echo "❌ Error: Run as ROOT."
   exit 1
 fi
 
 echo "========================================================="
-echo "   STARTING AUTOMATED CHAIN DEPLOYMENT"
+echo "   AUTOMATED AI DEPLOYMENT CHAIN"
+echo "   Target User: $AI_USER"
 echo "========================================================="
 
-# 2. RUN SYSTEM PREP (01)
-echo "--> [Step 1/4] Running System Dependencies..."
+# 1. SYSTEM PREP
+echo "--> [1/4] System Dependencies..."
 chmod +x 01_system_dependencies.sh
-./01_system_dependencies.sh
+./01_system_dependencies.sh > /dev/null 2>&1
 
-# 3. RUN DOCKER INSTALL (02)
-echo "--> [Step 2/4] Running Docker Installation..."
+# 2. DOCKER & USER
+echo "--> [2/4] Docker & User Setup..."
 chmod +x 02_install_docker.sh
-./02_install_docker.sh
+./02_install_docker.sh "$AI_USER" > /dev/null 2>&1
 
-# ------------------------------------------------------------------------------
-# THE HANDOFF: We need to know who the new user is to clone the repo correctly.
-# ------------------------------------------------------------------------------
-echo ""
-echo "========================================================="
-echo "   HANDOFF TO USER"
-echo "========================================================="
-echo "Please re-enter the username you created in the previous step."
-echo "The rest of the installation will happen under this user's account."
-read -p "Username: " TARGET_USER
-
-if ! id "$TARGET_USER" &>/dev/null; then
-    echo "❌ Error: User '$TARGET_USER' does not exist. Did the previous step fail?"
-    exit 1
-fi
-
-# Define paths
-USER_HOME="/home/$TARGET_USER"
+# 3. CLONE REPO
+echo "--> [3/4] Cloning AI Repository..."
+USER_HOME="/home/$AI_USER"
 REPO_DIR="$USER_HOME/local-ai-packaged"
 AI_REPO_URL="https://github.com/coleam00/local-ai-packaged.git"
 
-# 4. CLONE REPO & INJECT SCRIPT (Running as the Target User)
-echo "--> [Step 3/4] Cloning AI Repository and Injecting Config..."
+# Clone as the user
+su - "$AI_USER" -c "git clone -b stable $AI_REPO_URL $REPO_DIR" > /dev/null 2>&1
 
-# We use 'su -c' to run these commands AS the user, not as root
-su - "$TARGET_USER" -c "git clone -b stable $AI_REPO_URL $REPO_DIR"
-
-# Move the python script from CURRENT directory (Root's execution folder) 
-# to the USER'S new repo folder
+# Move Python Wizard
 cp setup_ultra_node.py "$REPO_DIR/"
-chown "$TARGET_USER:$TARGET_USER" "$REPO_DIR/setup_ultra_node.py"
+chown "$AI_USER:$AI_USER" "$REPO_DIR/setup_ultra_node.py"
 
-echo "✅ Repository cloned to: $REPO_DIR"
-
-# 5. EXECUTE THE WIZARD (As Target User)
-echo "--> [Step 4/4] Launching Ultra Node Wizard..."
-echo "---------------------------------------------------------"
-echo "Switching context to user: $TARGET_USER"
-echo "Starting Python Wizard..."
-echo "---------------------------------------------------------"
-
-# This executes the python script inside the user's shell
-su - "$TARGET_USER" -c "cd $REPO_DIR && python3 setup_ultra_node.py"
+# 4. LAUNCH WIZARD
+echo "--> [4/4] Launching Configuration Wizard..."
+echo "========================================================="
+su - "$AI_USER" -c "cd $REPO_DIR && python3 setup_ultra_node.py"
 
 echo ""
 echo "========================================================="
-echo "   CHAIN COMPLETE"
+echo "   DEPLOYMENT FINISHED"
 echo "========================================================="
-echo "To start your stack:"
-echo "1. Log in as $TARGET_USER"
-echo "2. cd local-ai-packaged"
-echo "3. python3 start_services.py --profile cpu --environment private"
+echo "To manage your stack:"
+echo "   su - $AI_USER"
+echo "   cd local-ai-packaged"
+echo "   python3 start_services.py --profile cpu --environment private"
 echo "========================================================="
