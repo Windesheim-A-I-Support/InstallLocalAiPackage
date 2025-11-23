@@ -6,9 +6,27 @@ import json
 import time
 import os
 import sys
+import socket
 
 # -----------------------------------------------------------------------------
-# CRYPTOGRAPHY & SECURITY
+# INTELLIGENT HELPERS
+# -----------------------------------------------------------------------------
+def get_lan_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(0.1)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except:
+        return "127.0.0.1"
+
+def get_hostname_guess():
+    return socket.gethostname().split('.')[0].lower()
+
+# -----------------------------------------------------------------------------
+# CRYPTO
 # -----------------------------------------------------------------------------
 def generate_secret(length=32):
     return secrets.token_urlsafe(length)
@@ -17,13 +35,12 @@ def generate_hex(length=16):
     return secrets.token_hex(length)
 
 def generate_jwt(secret, role):
-    """Generates a Supabase-compatible HS256 JWT."""
     header = {"typ": "JWT", "alg": "HS256"}
     payload = {
         "role": role,
         "iss": "supabase",
         "iat": int(time.time()),
-        "exp": int(time.time()) + 315360000 # 10 years
+        "exp": int(time.time()) + 315360000 
     }
     h = base64.urlsafe_b64encode(json.dumps(header).encode()).decode().rstrip('=')
     p = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip('=')
@@ -33,75 +50,72 @@ def generate_jwt(secret, role):
     return f"{h}.{p}.{s}"
 
 # -----------------------------------------------------------------------------
-# MAIN CONFIGURATION WIZARD
+# MAIN
 # -----------------------------------------------------------------------------
 def main():
-    print("\n=========================================================")
-    print("   ULTRA-NODE SETUP: DEEP OPENWEBUI INTEGRATION")
-    print("   (With 'On-Failure:2' Restart Limits)")
-    print("=========================================================\n")
+    print("\n------------------------------------------------")
+    print("   ULTRA-NODE WIZARD (Zero-Touch)")
+    print("------------------------------------------------")
 
-    # 1. IDENTIFY THE NODE
-    team_name = input("1. Team Name (lowercase, no spaces): ").strip().lower()
-    domain_root = input("2. Root Domain (e.g., company.com): ").strip()
-    host_ip = input("3. Local IP of THIS container: ").strip()
+    detected_ip = get_lan_ip()
+    detected_name = get_hostname_guess()
+    
+    # Fast Inputs
+    team_name = input(f"1. Team Name [{detected_name}]: ").strip().lower()
+    if not team_name: team_name = detected_name
 
-    print(f"\nConfiguring 'God Mode' for {team_name}...")
+    host_ip = input(f"2. Local IP [{detected_ip}]: ").strip()
+    if not host_ip: host_ip = detected_ip
+    
+    domain_root = input("3. Root Domain (Required): ").strip()
+    while not domain_root:
+        domain_root = input("3. Root Domain: ").strip()
 
-    # 2. GENERATE ALL SECRETS
-    # Supabase / Postgres
+    print(f"\nConfiguring {team_name} @ {host_ip}...")
+
+    # SECRETS
     jwt_secret = generate_secret(40)
     pg_pass = generate_secret(24)
     dash_pass = generate_secret(24)
-    
-    # Vector & Graph
     qdrant_key = generate_secret(32)
     neo4j_pass = generate_secret(24)
-    
-    # Langfuse (Observability)
     lf_salt = generate_secret()
     lf_secret = generate_secret()
-    ch_pass = generate_secret(24) # Clickhouse
+    ch_pass = generate_secret(24)
     minio_pass = generate_secret(24)
-    
-    # N8N & Flowise
     n8n_enc = generate_secret()
     n8n_jwt = generate_secret()
     flowise_pass = generate_secret(20)
 
-    # 3. DEFINE EXTERNAL HOSTNAMES
-    h_web = f"{team_name}-chat.{domain_root}"
-    h_n8n = f"{team_name}-n8n.{domain_root}"
-    h_flo = f"{team_name}-flowise.{domain_root}"
-    h_sup = f"{team_name}-supabase.{domain_root}"
-    h_obs = f"{team_name}-langfuse.{domain_root}"
-    h_srx = f"{team_name}-search.{domain_root}"
-    h_neo = f"{team_name}-neo4j.{domain_root}"
-    h_min = f"{team_name}-minio.{domain_root}"
+    # HOSTNAMES
+    hosts = {
+        "webui":    f"{team_name}-chat.{domain_root}",
+        "n8n":      f"{team_name}-n8n.{domain_root}",
+        "flowise":  f"{team_name}-flowise.{domain_root}",
+        "supabase": f"{team_name}-supabase.{domain_root}",
+        "langfuse": f"{team_name}-langfuse.{domain_root}",
+        "search":   f"{team_name}-search.{domain_root}",
+        "neo4j":    f"{team_name}-neo4j.{domain_root}",
+        "minio":    f"{team_name}-minio.{domain_root}",
+    }
 
-    # 4. PREPARE .ENV FILE (COMPREHENSIVE)
-    env_content = f"""# GENERATED ULTRA-NODE CONFIG FOR: {team_name}
-# ------------------------------------------------------------------
-
-# === NETWORK & IDENTITY ===
+    # .ENV CONTENT
+    env_content = f"""# CONFIG FOR: {team_name}
 HOST_IP={host_ip}
 DOMAIN_ROOT={domain_root}
 
-# === SERVICE HOSTNAMES ===
-WEBUI_HOSTNAME={h_web}
-N8N_HOSTNAME={h_n8n}
-FLOWISE_HOSTNAME={h_flo}
-SUPABASE_HOSTNAME={h_sup}
-LANGFUSE_HOSTNAME={h_obs}
-SEARXNG_HOSTNAME={h_srx}
-NEO4J_HOSTNAME={h_neo}
+WEBUI_HOSTNAME={hosts['webui']}
+N8N_HOSTNAME={hosts['n8n']}
+FLOWISE_HOSTNAME={hosts['flowise']}
+SUPABASE_HOSTNAME={hosts['supabase']}
+LANGFUSE_HOSTNAME={hosts['langfuse']}
+SEARXNG_HOSTNAME={hosts['search']}
+NEO4J_HOSTNAME={hosts['neo4j']}
 OLLAMA_HOSTNAME={team_name}-ollama.{domain_root}
 
-# === OPEN WEBUI (The Brain) ===
 ENABLE_SIGNUP=True
 DEFAULT_MODELS=llama3,mistral
 
-# === SUPABASE (The Backbone) ===
 POSTGRES_PASSWORD={pg_pass}
 JWT_SECRET={jwt_secret}
 ANON_KEY={generate_jwt(jwt_secret, 'anon')}
@@ -110,20 +124,17 @@ DASHBOARD_USERNAME=admin
 DASHBOARD_PASSWORD={dash_pass}
 POOLER_TENANT_ID={generate_hex(16)}
 POOLER_DB_POOL_SIZE=10
-API_EXTERNAL_URL=https://{h_sup}
-SUPABASE_PUBLIC_URL=https://{h_sup}
+API_EXTERNAL_URL=https://{hosts['supabase']}
+SUPABASE_PUBLIC_URL=https://{hosts['supabase']}
 STUDIO_DEFAULT_ORGANIZATION={team_name.capitalize()} Org
 STUDIO_DEFAULT_PROJECT={team_name.capitalize()} Project
 
-# === QDRANT (Vector Memory) ===
 QDRANT_API_KEY={qdrant_key}
 
-# === NEO4J (Graph Memory) ===
 NEO4J_AUTH=neo4j/{neo4j_pass}
 NEO4J_dbms_memory_heap_initial__size=512m
 NEO4J_dbms_memory_heap_max__size=1G
 
-# === LANGFUSE (Observability) ===
 CLICKHOUSE_PASSWORD={ch_pass}
 MINIO_ROOT_PASSWORD={minio_pass}
 LANGFUSE_SALT={lf_salt}
@@ -131,12 +142,11 @@ NEXTAUTH_SECRET={lf_secret}
 ENCRYPTION_KEY={generate_secret()}
 LANGFUSE_INIT_ORG_ID={team_name}-org
 LANGFUSE_INIT_PROJECT_ID={team_name}-project
-NEXTAUTH_URL=https://{h_obs}
+NEXTAUTH_URL=https://{hosts['langfuse']}
 DATABASE_URL=postgresql://postgres:{pg_pass}@db:5432/postgres
 CLICKHOUSE_URL=http://clickhouse:8123
 CLICKHOUSE_USER=default
 
-# === N8N (Automation) ===
 N8N_ENCRYPTION_KEY={n8n_enc}
 N8N_USER_MANAGEMENT_JWT_SECRET={n8n_jwt}
 DB_TYPE=postgresdb
@@ -146,7 +156,6 @@ DB_POSTGRESDB_PORT=5432
 DB_POSTGRESDB_USER=postgres
 DB_POSTGRESDB_PASSWORD={pg_pass}
 
-# === FLOWISE (Agents) ===
 FLOWISE_USERNAME=admin
 FLOWISE_PASSWORD={flowise_pass}
 FLOWISE_DATABASE_TYPE=postgres
@@ -156,20 +165,15 @@ FLOWISE_DATABASE_USER=postgres
 FLOWISE_DATABASE_PASSWORD={pg_pass}
 FLOWISE_DATABASE_NAME=postgres
 
-# === OLLAMA ===
 OLLAMA_ORIGINS="*"
 """
-
     with open(".env", "w") as f:
         f.write(env_content)
-    print("-> .env file created (All Values Filled).")
 
-    # 5. PREPARE DOCKER OVERRIDE (DEEP INTEGRATION + RESTART LIMITS)
-    
+    # DOCKER OVERRIDE
     docker_override = f"""version: "3.8"
 
 services:
-  # === OPEN WEBUI ===
   open-webui:
     ports: ["8080:8080"]
     restart: on-failure:2
@@ -192,7 +196,6 @@ services:
       - ENABLE_IMAGE_GENERATION=True
       - WEBHOOK_URL=http://n8n:5678/webhook/
 
-  # === DATABASES ===
   db:
     ports: ["5432:5432"]
     restart: on-failure:2
@@ -211,7 +214,6 @@ services:
     ports: ["8123:8123", "9000:9000"]
     restart: on-failure:2
 
-  # === APPLICATIONS ===
   flowise:
     ports: ["3001:3000"]
     restart: on-failure:2
@@ -224,8 +226,8 @@ services:
     ports: ["5678:5678"]
     restart: on-failure:2
     environment:
-      - N8N_HOST={h_n8n}
-      - WEBHOOK_URL=https://{h_n8n}/
+      - N8N_HOST={hosts['n8n']}
+      - WEBHOOK_URL=https://{hosts['n8n']}/
       - OLLAMA_HOST=http://ollama:11434
 
   langfuse-server:
@@ -251,51 +253,49 @@ services:
     ports: ["11434:11434"]
     restart: on-failure:2
 """
-
     with open("docker-compose.override.private.yml", "w") as f:
         f.write(docker_override)
-    print("-> docker-compose.override.private.yml created (With Restart Limits).")
 
-    # 6. TRAEFIK CONFIG
+    # TRAEFIK CONFIG
     traefik_yaml = f"""http:
   routers:
     {team_name}-webui:
-      rule: "Host(`{h_web}`)"
+      rule: "Host(`{hosts['webui']}`)"
       service: {team_name}-webui
       tls:
         certResolver: myresolver
     {team_name}-n8n:
-      rule: "Host(`{h_n8n}`)"
+      rule: "Host(`{hosts['n8n']}`)"
       service: {team_name}-n8n
       tls:
         certResolver: myresolver
     {team_name}-flowise:
-      rule: "Host(`{h_flo}`)"
+      rule: "Host(`{hosts['flowise']}`)"
       service: {team_name}-flowise
       tls:
         certResolver: myresolver
     {team_name}-supabase:
-      rule: "Host(`{h_sup}`)"
+      rule: "Host(`{hosts['supabase']}`)"
       service: {team_name}-supabase
       tls:
         certResolver: myresolver
     {team_name}-langfuse:
-      rule: "Host(`{h_obs}`)"
+      rule: "Host(`{hosts['langfuse']}`)"
       service: {team_name}-langfuse
       tls:
         certResolver: myresolver
     {team_name}-search:
-      rule: "Host(`{h_srx}`)"
+      rule: "Host(`{hosts['search']}`)"
       service: {team_name}-search
       tls:
         certResolver: myresolver
     {team_name}-neo4j:
-      rule: "Host(`{h_neo}`)"
+      rule: "Host(`{hosts['neo4j']}`)"
       service: {team_name}-neo4j
       tls:
         certResolver: myresolver
     {team_name}-minio:
-      rule: "Host(`{h_min}`)"
+      rule: "Host(`{hosts['minio']}`)"
       service: {team_name}-minio
       tls:
         certResolver: myresolver
@@ -334,18 +334,13 @@ services:
         servers:
           - url: "http://{host_ip}:9011"
 """
-    
     with open(f"traefik_{team_name}.yml", "w") as f:
         f.write(traefik_yaml)
 
-    print("\n=========================================================")
-    print("   ULTRA-NODE DEPLOYMENT READY")
-    print("=========================================================")
-    print("1. All Database Ports are OPEN on this Host IP.")
-    print("2. All Services set to 'restart: on-failure:2' (No infinite loops).")
-    print("3. Deep Integration Enabled (WebUI -> Qdrant/Ollama/SearXNG).")
-    print("=========================================================")
-    print("Run: python start_services.py --profile cpu --environment private")
+    print("\n------------------------------------------------")
+    print("   SETUP COMPLETE")
+    print("------------------------------------------------")
+    print(f"Traefik File: traefik_{team_name}.yml (Copy this!)")
 
 if __name__ == "__main__":
     main()
