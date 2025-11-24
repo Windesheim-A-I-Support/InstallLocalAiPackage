@@ -12,40 +12,24 @@ echo "   STEP 1: SYSTEM DEPENDENCIES & BASICS"
 echo "========================================================="
 
 # 2. UPDATE REPOSITORIES
-echo "--> [1/4] Updating package lists..."
-apt-get update -q && apt-get upgrade -y -q
+echo "--> [1/3] Updating package lists..."
+apt-get update -q
 
-# 3. INSTALL CORE UTILITIES
-# sudo: Needed for user privileges later
-# curl/wget/gnupg: Needed to download keys for Docker/Node
-# git: Needed to clone the repo
-# htop/net-tools: Needed for monitoring the server
-echo "--> [2/4] Installing core utilities..."
+# 3. INSTALL MINIMAL REQUIRED PACKAGES
+# For Debian 12 LXC container running Docker and Python scripts
+echo "--> [2/3] Installing required packages..."
 apt-get install -y -q \
-    sudo \
     curl \
-    wget \
-    gnupg \
-    lsb-release \
     ca-certificates \
+    gnupg \
     git \
-    htop \
-    net-tools \
-    unzip \
-    build-essential \
-    software-properties-common
+    python3
 
-# 4. INSTALL PYTHON ENVIRONMENT
-# The AI scripts use Python. Debian 12 requires venv for pip.
-echo "--> [3/4] Installing Python 3 and Virtual Environment tools..."
-apt-get install -y -q \
-    python3 \
-    python3-pip \
-    python3-venv \
-    python3-dev
+# Verify Python 3 is available (Debian 12 ships with Python 3.11)
+python3 --version
 
-# 5. CLEANUP
-echo "--> [4/4] Cleaning up..."
+# 4. CLEANUP
+echo "--> [3/3] Cleaning up..."
 apt-get autoremove -y -q
 apt-get clean
 
