@@ -166,6 +166,8 @@ FLOWISE_DATABASE_PASSWORD={pg_pass}
 FLOWISE_DATABASE_NAME=postgres
 
 OLLAMA_ORIGINS="*"
+DOCKER_SOCKET_LOCATION=/var/run/docker.sock
+POSTGRES_VERSION=15
 """
     with open(".env", "w") as f:
         f.write(env_content)
@@ -230,26 +232,11 @@ services:
       - WEBHOOK_URL=https://{hosts['n8n']}/
       - OLLAMA_HOST=http://ollama:11434
 
-  langfuse-server:
-    ports: ["3300:3000"]
-    restart: on-failure:2
-    environment:
-      - PORT=3000
-      - DATABASE_URL=postgresql://postgres:{pg_pass}@db:5432/postgres
-
   searxng:
     ports: ["8081:8080"]
     restart: on-failure:2
 
-  kong:
-    ports: ["8000:8000"]
-    restart: on-failure:2
-
-  minio:
-    ports: ["9011:9001", "9090:9000"]
-    restart: on-failure:2
-
-  ollama:
+  ollama-cpu:
     ports: ["11434:11434"]
     restart: on-failure:2
 """

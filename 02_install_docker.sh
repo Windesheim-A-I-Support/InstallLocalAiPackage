@@ -37,24 +37,31 @@ echo "--> [3/5] Installing Docker Engine & Compose..."
 apt-get install -y -q docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # 5. CONFIGURE USER PERMISSIONS (Crucial)
+# Accept username as argument from chain_setup.sh
+target_user="${1:-ai-admin}"
+
 echo "---------------------------------------------------------"
-echo "USER SETUP"
+echo "USER SETUP: $target_user"
 echo "We should not run the AI stack as root."
 echo "---------------------------------------------------------"
-read -p "Enter the username you want to use (e.g. 'admin' or 'aiuser'): " target_user
 
 # Create user if it doesn't exist
 if id "$target_user" &>/dev/null; then
     echo "--> User '$target_user' already exists."
 else
     echo "--> Creating user '$target_user'..."
-    adduser --gecos "" "$target_user"
+    adduser --disabled-password --gecos "" "$target_user"
 fi
 
 # Add to 'sudo' (admin rights) and 'docker' (container rights) groups
 echo "--> [4/5] Granting permissions..."
 usermod -aG sudo "$target_user"
 usermod -aG docker "$target_user"
+
+# Create NOPASSWD sudoers rule for automation
+echo "--> Creating NOPASSWD sudoers rule..."
+echo "$target_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$target_user
+chmod 0440 /etc/sudoers.d/$target_user
 
 # 6. VERIFY
 echo "--> [5/5] Verifying installation..."

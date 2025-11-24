@@ -18,12 +18,18 @@ echo "========================================================="
 # 1. SYSTEM PREP
 echo "--> [1/4] System Dependencies..."
 chmod +x 01_system_dependencies.sh
-./01_system_dependencies.sh > /dev/null 2>&1
+if ! ./01_system_dependencies.sh > /dev/null; then
+  echo "❌ Error: System dependencies installation failed."
+  exit 1
+fi
 
 # 2. DOCKER & USER
 echo "--> [2/4] Docker & User Setup..."
 chmod +x 02_install_docker.sh
-./02_install_docker.sh "$AI_USER" > /dev/null 2>&1
+if ! ./02_install_docker.sh "$AI_USER" > /dev/null; then
+  echo "❌ Error: Docker installation or user setup failed."
+  exit 1
+fi
 
 # 3. CLONE REPO
 echo "--> [3/4] Cloning AI Repository..."
@@ -32,7 +38,16 @@ REPO_DIR="$USER_HOME/local-ai-packaged"
 AI_REPO_URL="https://github.com/coleam00/local-ai-packaged.git"
 
 # Clone as the user
-su - "$AI_USER" -c "git clone -b stable $AI_REPO_URL $REPO_DIR" > /dev/null 2>&1
+if ! su - "$AI_USER" -c "git clone -b stable $AI_REPO_URL $REPO_DIR" > /dev/null; then
+  echo "❌ Error: Failed to clone repository."
+  exit 1
+fi
+
+# Verify critical files exist
+if [ ! -f "$REPO_DIR/start_services.py" ]; then
+  echo "❌ Error: Repository incomplete - start_services.py not found."
+  exit 1
+fi
 
 # Move Python Wizard
 cp setup_ultra_node.py "$REPO_DIR/"
