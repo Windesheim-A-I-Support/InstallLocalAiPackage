@@ -18,12 +18,57 @@ apt-get update -q
 # 3. INSTALL MINIMAL REQUIRED PACKAGES
 # For Debian 12 LXC container running Docker and Python scripts
 echo "--> [2/3] Installing required packages..."
-apt-get install -y -q \
+apt-get update && apt-get install -y -q \
+    sudo \
     curl \
+    wget \
+    git \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
     ca-certificates \
     gnupg \
-    git \
-    python3
+    man-db \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    nodejs \
+    npm \
+    ruby-full \
+    ruby-dev \
+    ruby-bundler \
+    psmisc \
+    procps \
+    htop \
+    lsof \
+    strace \
+    dstat \
+    sysstat \
+    iputils-ping \
+    dnsutils \
+    net-tools \
+    iproute2 \
+    traceroute \
+    nmap \
+    netcat-openbsd \
+    tcpdump \
+    socat \
+    whois \
+    postgresql-client \
+    default-mysql-client \
+    redis-tools \
+    sqlite3 \
+    libsqlite3-dev \
+    tree \
+    jq \
+    vim \
+    nano \
+    less \
+    zip \
+    unzip \
+    tar \
+    ripgrep
 
 # Verify Python 3 is available (Debian 12 ships with Python 3.11)
 python3 --version

@@ -1,18 +1,40 @@
 #!/bin/bash
 set -e
 
-echo "========================================================="
-echo "   CONFIGURING SERVICE INTEGRATIONS"
-echo "========================================================="
-
-# This script patches docker-compose.override.private.yml to add integration environment variables
+# ==============================================================================
+# STEP 4: CONFIGURE SERVICE INTEGRATIONS
+# This script creates/patches docker-compose.override.private.yml
 # Based on verified integrations from official documentation:
 # - Open WebUI → Qdrant (vector DB), Ollama (LLM)
 # - n8n → Ollama (LLM)
 # - Flowise → Qdrant (vector DB), Ollama (LLM)
+# ==============================================================================
+
+# Configuration
+REPO_DIR="/opt/local-ai-packaged"
+
+# Check if running as the AI user (not root)
+if [ "$EUID" -eq 0 ]; then
+  echo "❌ Error: Do NOT run this script as root."
+  exit 1
+fi
+
+echo "========================================================="
+echo "   STEP 4: CONFIGURING SERVICE INTEGRATIONS"
+echo "========================================================="
+
+# Change to repository directory
+if [ ! -d "$REPO_DIR" ]; then
+    echo "❌ Error: Repository directory $REPO_DIR not found."
+    echo "   Please run 03_clone_and_setup_env.sh first."
+    exit 1
+fi
+
+cd "$REPO_DIR"
 
 if [ ! -f "docker-compose.override.private.yml" ]; then
-    echo "❌ Error: docker-compose.override.private.yml not found. Please run this in the local-ai-packaged directory."
+    echo "❌ Error: docker-compose.override.private.yml not found in repository."
+    echo "   The official repo should have this file. Check your clone."
     exit 1
 fi
 

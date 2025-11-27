@@ -8,7 +8,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 echo "========================================================="
-echo "   OPENING SSH ACCESS (ROOT + PASS + KEY)"
+echo "   OwPENING SSH ACCESS (ROOT + PASS + KEY)"
 echo "   Context: VPN Protected Environment"
 echo "========================================================="
 
@@ -41,17 +41,27 @@ sed -i 's/^#\?ChallengeResponseAuthentication.*/ChallengeResponseAuthentication 
 # E. Ensure empty passwords are NOT allowed (Basic sanity check)
 sed -i 's/^#\?PermitEmptyPasswords.*/PermitEmptyPasswords no/' /etc/ssh/sshd_config
 
-# 5. ENSURE ROOT .SSH DIRECTORY EXISTS
+# 5. ENSURE ROOT .SSH DIRECTORY EXISTS & ADD SSH KEY
 # This ensures you can actually add keys later
-echo "--> [4/5] Checking root .ssh directory..."
+echo "--> [4/5] Setting up SSH keys..."
 mkdir -p /root/.ssh
 chmod 700 /root/.ssh
 touch /root/.ssh/authorized_keys
 chmod 600 /root/.ssh/authorized_keys
 
+# Add the Claude Code SSH key
+SSH_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINWvFcpfPYPzu6zxjLUlYDqmJYXRRbxexPBFR6NvSyR5 claude-code"
+
+if ! grep -q "$SSH_KEY" /root/.ssh/authorized_keys 2>/dev/null; then
+    echo "$SSH_KEY" >> /root/.ssh/authorized_keys
+    echo "✅ Added claude-code SSH key to root authorized_keys"
+else
+    echo "✅ SSH key already present in authorized_keys"
+fi
+
 # 6. RESTART SERVICE
 echo "--> [5/5] Restarting SSH Daemon..."
-systemctl restart ssh
+systemctl restart ssh || service ssh restart || echo "⚠️  Could not restart SSH (may be in LXC container)"
 
 echo "========================================================="
 echo "   ACCESS GRANTED"
@@ -59,7 +69,8 @@ echo "========================================================="
 echo "1. Root Login: ENABLED"
 echo "2. Password Auth: ENABLED"
 echo "3. Key Auth: ENABLED"
+echo "4. SSH Key Added: claude-code"
 echo "---------------------------------------------------------"
-echo "To add a key: Paste public key into /root/.ssh/authorized_keys"
-echo "To set password (if unknown): Run 'passwd root'"
+echo "You can now SSH as root using your SSH key"
+echo "To set/change password: Run 'passwd root'"
 echo "========================================================="

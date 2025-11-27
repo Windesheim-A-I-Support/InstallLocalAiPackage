@@ -1,0 +1,145 @@
+version: '3.8'
+
+# Docker Compose Override for Private Network Deployment (CPU Profile)
+# This file configures all service integrations for the AI stack
+#
+# Usage: This override is automatically used when running:
+#   python3 start_services.py --profile cpu --environment private
+
+services:
+  # ==========================================
+  # OPEN WEBUI - AI Chat Interface
+  # ==========================================
+  open-webui:
+    environment:
+      # Ollama LLM Integration
+      - OLLAMA_BASE_URL=http://ollama:11434
+
+      # Qdrant Vector Database Integration
+      - VECTOR_DB=qdrant
+      - QDRANT_URI=http://qdrant:6333
+
+      # Optional: Langfuse Observability Integration
+      # - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      # - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      # - LANGFUSE_HOST=http://langfuse:3002
+
+  # ==========================================
+  # N8N - Workflow Automation
+  # ==========================================
+  n8n:
+    environment:
+      # Enable external npm packages in function nodes
+      - NODE_FUNCTION_ALLOW_EXTERNAL=*
+
+      # Ollama integration available via workflow nodes
+      # Configure in n8n UI: http://ollama:11434
+
+  # ==========================================
+  # FLOWISE - Low-Code AI Orchestration
+  # ==========================================
+  flowise:
+    # Integrations configured in UI:
+    # - Qdrant Vector Store: Use host 'qdrant:6333'
+    # - ChatOllama: Use URL 'http://ollama:11434'
+    # - PostgreSQL: Already configured via environment variables in main compose
+    environment:
+      # Additional integrations can be added here
+      # Example: Langfuse tracing
+      # - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      # - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      # - LANGFUSE_HOST=http://langfuse:3002
+
+  # ==========================================
+  # OLLAMA - LLM Inference Engine
+  # ==========================================
+  ollama-cpu:
+    environment:
+      # Bind to all interfaces for container access
+      - OLLAMA_HOST=0.0.0.0:11434
+
+      # Allow CORS from all origins
+      - OLLAMA_ORIGINS=*
+
+      # Optional: Debug logging
+      # - OLLAMA_DEBUG=1
+
+  # ==========================================
+  # QDRANT - Vector Database
+  # ==========================================
+  qdrant:
+    # No additional configuration needed
+    # Accessible at: http://qdrant:6333 (from containers)
+    #                http://localhost:6333 (from host)
+    environment:
+      # Optional: Configure collection defaults
+      # - QDRANT__SERVICE__MAX_REQUEST_SIZE_MB=32
+
+  # ==========================================
+  # LANGFUSE - LLM Observability (Optional)
+  # ==========================================
+  langfuse:
+    # Langfuse is available for tracking LLM calls
+    # Configure in Open WebUI/Flowise UI with:
+    # - Host: http://langfuse:3002
+    # - Public Key: From .env
+    # - Secret Key: From .env
+    environment:
+      # Already configured via main docker-compose.yml
+      # Add overrides here if needed
+
+  # ==========================================
+  # NEO4J - Graph Database
+  # ==========================================
+  neo4j:
+    # Available for knowledge graph integrations
+    # Access at: http://neo4j:7474 (browser)
+    #            bolt://neo4j:7687 (protocol)
+    environment:
+      # Already configured via main docker-compose.yml
+      # Add overrides here if needed
+
+  # ==========================================
+  # SEARXNG - Search Aggregation
+  # ==========================================
+  searxng:
+    # Available for web search in Open WebUI and n8n
+    # Access at: http://searxng:8081
+    environment:
+      # Already configured via main docker-compose.yml
+      # Add overrides here if needed
+
+  # ==========================================
+  # MINIO - Object Storage
+  # ==========================================
+  minio:
+    # S3-compatible storage for files and backups
+    # Console: http://minio-console:9011
+    # API: http://minio:9000
+    environment:
+      # Already configured via main docker-compose.yml
+      # Add overrides here if needed
+
+# ==========================================
+# INTEGRATION SUMMARY
+# ==========================================
+#
+# ✅ CONFIGURED:
+# - Open WebUI → Ollama (LLM inference)
+# - Open WebUI → Qdrant (vector storage for RAG)
+# - n8n → External packages enabled
+# - Ollama → Host binding and CORS
+#
+# 🔧 CONFIGURE IN UI:
+# - Flowise → Qdrant: Use 'qdrant:6333' in Vector Store node
+# - Flowise → Ollama: Use 'http://ollama:11434' in ChatOllama node
+# - n8n → Ollama: Add HTTP Request node with 'http://ollama:11434/api/generate'
+# - Open WebUI → Langfuse: Settings → Connections → Add Langfuse
+#
+# 📚 DOCUMENTATION:
+# - Open WebUI: https://docs.openwebui.com/getting-started/env-configuration/
+# - n8n + Ollama: https://docs.ollama.com/integrations/n8n
+# - Flowise: https://docs.flowiseai.com/
+# - Qdrant: https://qdrant.tech/documentation/
+#
+# ==========================================
