@@ -49,6 +49,22 @@
 | Playwright | 10.0.5.24 | 3007 | http://10.0.5.24:3007 | Browser automation API |
 | **Container Management** |
 | Portainer | 10.0.5.24 | 9443 | https://10.0.5.24:9443 | Docker UI |
+| **Communication** |
+| Mailcow | 10.0.5.24 | 25/587/993 | https://mail.valuechainhackers.xyz | Mail server (SMTP/IMAP) |
+| Matrix/Element | 10.0.5.24 | 3010/8008 | http://10.0.5.24:3010 | Team chat |
+| **CRM & Business** |
+| EspoCRM | 10.0.5.24 | 3009 | http://10.0.5.24:3009 | Customer relationship mgmt |
+| Apache Superset | 10.0.5.24 | 3011 | http://10.0.5.24:3011 | Enterprise BI/analytics |
+| **Additional Databases** |
+| DuckDB | 10.0.5.24 | 8089 | http://10.0.5.24:8089 | Analytical database API |
+| **Authentication** |
+| Authentik | 10.0.5.24 | 9000 | http://10.0.5.24:9000 | SSO/OAuth2/SAML provider |
+| **Image Generation** |
+| ComfyUI | 10.0.5.24 | 8188 | http://10.0.5.24:8188 | Node-based Stable Diffusion |
+| AUTOMATIC1111 | 10.0.5.24 | 7860 | http://10.0.5.24:7860 | Classic SD WebUI |
+| **Enhanced Audio** |
+| faster-whisper | 10.0.5.24 | 8000 | http://10.0.5.24:8000 | Optimized STT (faster) |
+| openedai-speech | 10.0.5.24 | 8001 | http://10.0.5.24:8001 | Fast TTS (Piper/Coqui) |
 
 ## Open WebUI Connection Variables
 
@@ -79,11 +95,21 @@ ENABLE_RAG_WEB_SEARCH=true
 RAG_WEB_SEARCH_ENGINE=searxng
 SEARXNG_QUERY_URL=http://10.0.5.24:8080/search?q=<query>
 
-# Speech & Translation
+# Speech & Translation (Standard)
 AUDIO_STT_ENGINE=openai-whisper
 AUDIO_STT_OPENAI_WHISPER_API_BASE_URL=http://10.0.5.24:9000
 AUDIO_TTS_ENGINE=openai
 AUDIO_TTS_OPENAI_API_BASE_URL=http://10.0.5.24:11434/v1
+
+# Speech & Translation (Enhanced - Faster/Better)
+AUDIO_STT_ENGINE=openai
+AUDIO_STT_OPENAI_API_BASE_URL=http://10.0.5.24:8000/v1
+AUDIO_TTS_ENGINE=openai
+AUDIO_TTS_OPENAI_API_BASE_URL=http://10.0.5.24:8001/v1
+
+# Image Generation
+AUTOMATIC1111_BASE_URL=http://10.0.5.24:7860
+COMFYUI_BASE_URL=http://10.0.5.24:8188
 
 # Document Processing
 DOCS_DIR=/app/backend/data/docs
