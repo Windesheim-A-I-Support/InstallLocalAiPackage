@@ -63,6 +63,10 @@ bash 15_deploy_openwebui_instance.sh webui2 3001
 - `36` Mailcow `37` EspoCRM `38` Matrix+Element
 - `39` Apache Superset `40` DuckDB `41` Authentik
 
+**Shared Services (Image Generation & A/V):**
+- `42` ComfyUI `43` AUTOMATIC1111
+- `44` faster-whisper `45` openedai-speech
+
 **Instances:**
 - `15_deploy_openwebui_instance.sh` - Deploy WebUI
 
