@@ -47,12 +47,21 @@ bash 15_deploy_openwebui_instance.sh webui2 3001
 **Base:**
 - `01_system_dependencies.sh` `02_install_docker.sh` `07_enablessh.sh`
 
-**Shared Services:**
+**Shared Services (AI/ML):**
 - `11` Ollama `12` Qdrant `13` PostgreSQL `14` Redis
 - `16` MinIO `17` SearXNG `18` Langfuse `19` Neo4j
 - `20` Jupyter `21` N8N `22` Flowise
 - `23` Tika `24` Docling `25` Whisper
 - `26` LibreTranslate `27` MCPO
+
+**Shared Services (Enterprise):**
+- `28` Gitea `29` Monitoring (Prometheus+Grafana+Loki)
+- `30` BookStack `31` Metabase `32` Playwright
+- `33` code-server `34` Portainer `35` Formbricks
+
+**Shared Services (Communication & Auth):**
+- `36` Mailcow `37` EspoCRM `38` Matrix+Element
+- `39` Apache Superset `40` DuckDB `41` Authentik
 
 **Instances:**
 - `15_deploy_openwebui_instance.sh` - Deploy WebUI
@@ -76,6 +85,8 @@ docker exec -it minimal-ai-ollama ollama pull nomic-embed-text
 
 ## Documentation
 
+- [SERVICES_REFERENCE.md](SERVICES_REFERENCE.md) - Complete service inventory & connection URLs
+- [AUTHENTICATION_STRATEGY.md](AUTHENTICATION_STRATEGY.md) - Auth & SSO strategy
 - [SCALING_GUIDE.md](SCALING_GUIDE.md) - Architecture guide
 - [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Full instructions
 - [ENV-REFERENCE.md](ENV-REFERENCE.md) - Environment variables
