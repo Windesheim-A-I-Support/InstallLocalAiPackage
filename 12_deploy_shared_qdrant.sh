@@ -2,22 +2,34 @@
 set -e
 
 # Shared Qdrant vector database (native install)
-# Shared across multiple Open WebUI instances for RAG
+# Usage: bash 12_deploy_shared_qdrant.sh [--update]
 
 if [ "$EUID" -ne 0 ]; then
   echo "❌ Run as root"
   exit 1
 fi
 
-echo "=== Qdrant Shared Service Deployment ==="
+# Update mode
+if [ "$1" = "--update" ]; then
+  echo "=== Updating Qdrant ==="
+  systemctl stop qdrant
+  cp /usr/local/bin/qdrant /usr/local/bin/qdrant.backup
+  VERSION=$(curl -s https://api.github.com/repos/qdrant/qdrant/releases/latest | grep '"tag_name"' | sed -E 's/.*"v([^"]+)".*/\1/')
+  wget -q https://github.com/qdrant/qdrant/releases/download/v${VERSION}/qdrant-x86_64-unknown-linux-musl.tar.gz
+  tar xzf qdrant-x86_64-unknown-linux-musl.tar.gz
+  mv qdrant /usr/local/bin/
+  chmod +x /usr/local/bin/qdrant
+  rm qdrant-x86_64-unknown-linux-musl.tar.gz
+  systemctl start qdrant
+  echo "✅ Qdrant updated to v$VERSION"
+  exit 0
+fi
 
-# Install Rust (needed for compilation)
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-source $HOME/.cargo/env
+echo "=== Qdrant Shared Service Deployment ==="
 
 # Install build dependencies
 apt update
-apt install -y build-essential pkg-config libssl-dev
+apt install -y build-essential pkg-config libssl-dev wget
 
 # Download and install Qdrant
 VERSION="1.12.5"

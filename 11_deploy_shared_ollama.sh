@@ -2,11 +2,20 @@
 set -e
 
 # Shared Ollama service (native install)
-# Can be used by multiple Open WebUI instances
+# Usage: bash 11_deploy_shared_ollama.sh [--update]
 
 if [ "$EUID" -ne 0 ]; then
   echo "❌ Run as root"
   exit 1
+fi
+
+# Update mode
+if [ "$1" = "--update" ]; then
+  echo "=== Updating Ollama ==="
+  curl -fsSL https://ollama.com/install.sh | sh
+  systemctl restart ollama
+  echo "✅ Ollama updated: $(ollama --version)"
+  exit 0
 fi
 
 echo "=== Ollama Shared Service Deployment ==="
