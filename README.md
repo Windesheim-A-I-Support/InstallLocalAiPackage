@@ -103,6 +103,10 @@ bash 45_deploy_shared_openedai_speech.sh           # Better TTS
 **Cloud:**
 - `09` Nextcloud `10` Supabase
 
+**Network Configuration:**
+- `50` Layer 2 network setup
+- `51` Pin Docker version
+
 **Utilities:**
 - `99` Docker cleanup
 
@@ -187,7 +191,31 @@ bash 99_cleanup_docker.sh --aggressive # Remove all unused images/volumes
 
 ## Service Count
 
-- **49 deployment scripts** (01-48, 99)
+- **51 deployment scripts** (01-48, 50-51, 99)
 - **46+ services** available
 - **4 AI interfaces** to choose from
 - **All support `--update` flag**
+
+## Layer 2 Networking (Advanced)
+
+For production deployments where Open WebUI instances need Layer 2 bridge networking:
+
+```bash
+# 1. Pin Docker to stable version (prevents breaking changes)
+bash 51_pin_docker_version.sh 24.0.7
+
+# 2. Configure Layer 2 macvlan network
+bash 50_configure_layer2_network.sh ens18
+
+# 3. Deploy Open WebUI on Layer 2 (gets IP from DHCP)
+bash /root/deploy_openwebui_layer2.sh webui1 10.0.5.200
+bash /root/deploy_openwebui_layer2.sh webui2 10.0.5.201
+```
+
+**Benefits:**
+- Containers get IPs from physical network DHCP
+- Avoids Docker networking issues
+- Stable with older Docker versions
+- Direct Layer 2 connectivity
+
+See [IP_ALLOCATION.md](IP_ALLOCATION.md) for recommended IP ranges.
