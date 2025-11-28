@@ -88,6 +88,7 @@ REDIS_PASSWORD=$(generate_secret)
 SEARXNG_SECRET=$(generate_secret)
 MINIO_ROOT_PASSWORD=$(generate_secret)
 PIPELINES_API_KEY="0p3n-w3bu!"  # Default pipelines API key
+WEBUI_SECRET_KEY=$(generate_secret)
 
 echo "✅ Secrets generated"
 
@@ -195,7 +196,11 @@ services:
       OLLAMA_BASE_URL: http://ollama:11434
       OPENAI_API_BASE_URLS: http://pipelines:9099
       OPENAI_API_KEYS: "dummy-key"
-      WEBUI_AUTH: "false"
+      WEBUI_AUTH: "true"
+      # Authentication
+      WEBUI_SECRET_KEY: \${WEBUI_SECRET_KEY}
+      ENABLE_SIGNUP: "true"
+      DEFAULT_USER_ROLE: "user"
       # RAG Configuration
       ENABLE_RAG_WEB_SEARCH: "true"
       VECTOR_DB: qdrant
@@ -357,6 +362,9 @@ MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD
 
 # Pipelines
 PIPELINES_API_KEY=$PIPELINES_API_KEY
+
+# Open WebUI Authentication
+WEBUI_SECRET_KEY=$WEBUI_SECRET_KEY
 
 # Service URLs (for integration)
 OLLAMA_API_URL=http://ollama:11434
