@@ -65,6 +65,9 @@
 | **Enhanced Audio** |
 | faster-whisper | 10.0.5.24 | 8000 | http://10.0.5.24:8000 | Optimized STT (faster) |
 | openedai-speech | 10.0.5.24 | 8001 | http://10.0.5.24:8001 | Fast TTS (Piper/Coqui) |
+| **LLM Tools** |
+| ChainForge | 10.0.5.24 | 8002 | http://10.0.5.24:8002 | Prompt engineering & eval |
+| big-AGI | 10.0.5.24 | 3012 | http://10.0.5.24:3012 | Advanced multi-model UI |
 
 ## Open WebUI Connection Variables
 
