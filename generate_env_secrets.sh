@@ -32,6 +32,9 @@ DASHBOARD_PASSWORD=$(python3 -c "import secrets; print(secrets.token_urlsafe(20)
 POOLER_TENANT_ID=$(python3 -c "import random; print(random.randint(1000, 9999))")
 SECRET_KEY_BASE=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
 VAULT_ENC_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+REDIS_PASSWORD=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+SEARXNG_SECRET=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+PIPELINES_API_KEY="0p3n-w3bu!"  # Default pipelines API key
 
 echo "--> Updating .env file with generated secrets..."
 
@@ -50,6 +53,9 @@ sed -i "s|^DASHBOARD_PASSWORD=.*|DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD}|" .env
 sed -i "s|^POOLER_TENANT_ID=.*|POOLER_TENANT_ID=${POOLER_TENANT_ID}|" .env
 sed -i "s|^SECRET_KEY_BASE=.*|SECRET_KEY_BASE=${SECRET_KEY_BASE}|" .env
 sed -i "s|^VAULT_ENC_KEY=.*|VAULT_ENC_KEY=${VAULT_ENC_KEY}|" .env
+sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=${REDIS_PASSWORD}|" .env
+sed -i "s|^SEARXNG_SECRET=.*|SEARXNG_SECRET=${SEARXNG_SECRET}|" .env
+sed -i "s|^PIPELINES_API_KEY=.*|PIPELINES_API_KEY=${PIPELINES_API_KEY}|" .env
 
 echo ""
 echo "========================================================="
@@ -72,6 +78,9 @@ echo "DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:0:10}..."
 echo "POOLER_TENANT_ID: ${POOLER_TENANT_ID}"
 echo "SECRET_KEY_BASE: ${SECRET_KEY_BASE:0:20}..."
 echo "VAULT_ENC_KEY: ${VAULT_ENC_KEY:0:20}..."
+echo "REDIS_PASSWORD: ${REDIS_PASSWORD:0:20}..."
+echo "SEARXNG_SECRET: ${SEARXNG_SECRET:0:20}..."
+echo "PIPELINES_API_KEY: ${PIPELINES_API_KEY}"
 echo ""
 echo "Your .env file is now ready for deployment!"
 echo "========================================================="

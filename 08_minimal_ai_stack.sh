@@ -84,6 +84,10 @@ LANGFUSE_SALT=$(generate_secret)
 N8N_ENCRYPTION_KEY=$(generate_secret)
 NEO4J_PASSWORD=$(generate_secret)
 JUPYTER_TOKEN=$(generate_secret)
+REDIS_PASSWORD=$(generate_secret)
+SEARXNG_SECRET=$(generate_secret)
+MINIO_ROOT_PASSWORD=$(generate_secret)
+PIPELINES_API_KEY="0p3n-w3bu!"  # Default pipelines API key
 
 echo "✅ Secrets generated"
 
@@ -169,6 +173,7 @@ services:
       - ./pipelines/data:/app/pipelines
     environment:
       PIPELINES_DIR: /app/pipelines
+      PIPELINES_API_KEY: ${PIPELINES_API_KEY}
     networks:
       - ai-network
     healthcheck:
@@ -339,6 +344,19 @@ NEO4J_PASSWORD=$NEO4J_PASSWORD
 
 # Jupyter
 JUPYTER_TOKEN=$JUPYTER_TOKEN
+
+# Redis
+REDIS_PASSWORD=$REDIS_PASSWORD
+
+# SearXNG
+SEARXNG_SECRET=$SEARXNG_SECRET
+
+# MinIO
+MINIO_ROOT_USER=admin
+MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD
+
+# Pipelines
+PIPELINES_API_KEY=$PIPELINES_API_KEY
 
 # Service URLs (for integration)
 OLLAMA_API_URL=http://ollama:11434
