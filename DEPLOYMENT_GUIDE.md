@@ -328,10 +328,19 @@ Assuming team name `team1` and domain `example.com`:
 
 1. **Access Open WebUI** and create your first account
 2. **Pull LLM models** via Ollama
-3. **Configure Flowise** with Qdrant and Ollama nodes
-4. **Setup n8n workflows** connecting to Ollama
-5. **Enable Langfuse tracing** in Open WebUI settings
-6. **Create vector collections** in Qdrant for RAG
+3. **Configure Pipelines in Open WebUI:**
+   - Go to Admin Panel → Settings → Connections
+   - Click "+" to add new OpenAI API connection
+   - Enter:
+     - Name: `Pipelines`
+     - Base URL: `http://pipelines:9099`
+     - API Key: `0p3n-w3bu!`
+   - Click Save
+   - This enables the pipelines plugin framework for Open WebUI
+4. **Configure Flowise** with Qdrant and Ollama nodes
+5. **Setup n8n workflows** connecting to Ollama
+6. **Enable Langfuse tracing** in Open WebUI settings
+7. **Create vector collections** in Qdrant for RAG
 
 ---
 
