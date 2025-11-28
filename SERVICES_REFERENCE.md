@@ -2,6 +2,8 @@
 
 **Central Hub**: Open WebUI (connects to all services)
 
+**📌 Note**: This shows current deployments on 10.0.5.24. For the planned IP allocation with dedicated IPs per service (10.0.5.100+), see [IP_ALLOCATION.md](IP_ALLOCATION.md).
+
 ## Shared Services Infrastructure
 
 | Service | Host | Port | URL | Purpose |

@@ -179,6 +179,7 @@ bash 99_cleanup_docker.sh --aggressive # Remove all unused images/volumes
 
 - **[DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)** - 📊 Complete infrastructure overview
 - **[SERVICES_REFERENCE.md](SERVICES_REFERENCE.md)** - 🔗 Service inventory & connection URLs
+- **[IP_ALLOCATION.md](IP_ALLOCATION.md)** - 🌐 Network architecture & IP assignments
 - **[AUTHENTICATION_STRATEGY.md](AUTHENTICATION_STRATEGY.md)** - 🔐 Auth & SSO strategy
 - [SCALING_GUIDE.md](SCALING_GUIDE.md) - Architecture patterns
 - [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Step-by-step instructions
