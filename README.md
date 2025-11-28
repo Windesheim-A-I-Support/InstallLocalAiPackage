@@ -67,6 +67,9 @@ bash 15_deploy_openwebui_instance.sh webui2 3001
 - `42` ComfyUI `43` AUTOMATIC1111
 - `44` faster-whisper `45` openedai-speech
 
+**Shared Services (LLM Tools):**
+- `46` ChainForge (prompt engineering & LLM evaluation)
+
 **Instances:**
 - `15_deploy_openwebui_instance.sh` - Deploy WebUI
 
