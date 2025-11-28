@@ -69,6 +69,7 @@ bash 15_deploy_openwebui_instance.sh webui2 3001
 
 **Shared Services (LLM Tools):**
 - `46` ChainForge (prompt engineering & LLM evaluation)
+- `47` big-AGI (advanced multi-model AI interface)
 
 **Instances:**
 - `15_deploy_openwebui_instance.sh` - Deploy WebUI
