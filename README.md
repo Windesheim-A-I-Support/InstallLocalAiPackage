@@ -119,14 +119,15 @@ bash 45_deploy_shared_openedai_speech.sh           # Better TTS
 
 **big-AGI:**
 - URL: `http://10.0.5.24:3012`
-- Configure Ollama: Models settings → Add endpoint `http://host.docker.internal:11434`
+- Ollama auto-configured (uses `host.docker.internal:11434`)
 
 **ChainForge:**
 - URL: `http://10.0.5.24:8002`
-- Connect to Ollama at `http://10.0.5.24:11434`
+- Ollama auto-configured (uses `host.docker.internal:11434`)
 
 **Kotaemon:**
 - URL: `http://10.0.5.24:7860`
+- Ollama auto-configured (uses `host.docker.internal:11434`)
 - Upload documents and ask questions with RAG
 
 ### Pull Ollama Models

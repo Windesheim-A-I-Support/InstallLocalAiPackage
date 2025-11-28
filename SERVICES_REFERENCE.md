@@ -68,6 +68,7 @@
 | **LLM Tools** |
 | ChainForge | 10.0.5.24 | 8002 | http://10.0.5.24:8002 | Prompt engineering & eval |
 | big-AGI | 10.0.5.24 | 3012 | http://10.0.5.24:3012 | Advanced multi-model UI |
+| Kotaemon | 10.0.5.24 | 7860 | http://10.0.5.24:7860 | RAG document QA system |
 
 ## Open WebUI Connection Variables
 
