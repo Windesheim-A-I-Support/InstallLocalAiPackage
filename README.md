@@ -1,6 +1,6 @@
 # Local AI Stack Deployment
 
-Complete enterprise AI infrastructure with **49 deployment scripts** for Debian 12.
+Complete enterprise AI infrastructure with **51 deployment scripts** for Debian 12.
 
 ## Infrastructure
 
