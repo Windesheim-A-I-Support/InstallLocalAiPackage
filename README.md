@@ -1,6 +1,6 @@
 # Local AI Stack Deployment
 
-Complete enterprise AI infrastructure with **48 deployment scripts** for Debian 12.
+Complete enterprise AI infrastructure with **49 deployment scripts** for Debian 12.
 
 ## Infrastructure
 
@@ -16,10 +16,11 @@ Complete enterprise AI infrastructure with **48 deployment scripts** for Debian 
 **Shared Services** (1x deployment, N instances connect):
 - 45+ services: Ollama, Qdrant, PostgreSQL, Redis, MinIO, etc.
 
-**AI Interfaces** (3 options):
+**AI Interfaces** (4 options):
 - **Open WebUI** - Production AI chat (script 08 or 15)
 - **big-AGI** - Advanced multi-model interface (script 47)
 - **ChainForge** - Prompt engineering & evaluation (script 46)
+- **Kotaemon** - RAG document QA system (script 48)
 
 **Scalability:**
 - Deploy shared services once
@@ -51,6 +52,7 @@ bash 14_deploy_shared_redis.sh
 bash 15_deploy_openwebui_instance.sh webui1 3000  # Production chat
 bash 47_deploy_shared_big_agi.sh                   # Advanced features
 bash 46_deploy_shared_chainforge.sh                # Prompt engineering
+bash 48_deploy_shared_kotaemon.sh                  # Document QA
 
 # 4. Optional: Image generation
 bash 42_deploy_shared_comfyui.sh                   # Modern Stable Diffusion
@@ -89,12 +91,14 @@ bash 45_deploy_shared_openedai_speech.sh           # Better TTS
 **Shared Services (LLM Tools):**
 - `46` ChainForge (prompt engineering & LLM evaluation)
 - `47` big-AGI (advanced multi-model AI interface)
+- `48` Kotaemon (RAG document QA system)
 
 **AI Interfaces:**
 - `08` All-in-one stack (legacy)
 - `15` Open WebUI instance (scalable)
 - `46` ChainForge (prompt engineering)
 - `47` big-AGI (advanced multi-model)
+- `48` Kotaemon (document QA)
 
 **Cloud:**
 - `09` Nextcloud `10` Supabase
@@ -120,6 +124,10 @@ bash 45_deploy_shared_openedai_speech.sh           # Better TTS
 **ChainForge:**
 - URL: `http://10.0.5.24:8002`
 - Connect to Ollama at `http://10.0.5.24:11434`
+
+**Kotaemon:**
+- URL: `http://10.0.5.24:7860`
+- Upload documents and ask questions with RAG
 
 ### Pull Ollama Models
 
@@ -150,19 +158,21 @@ bash 99_cleanup_docker.sh --aggressive # Remove all unused images/volumes
 
 ## AI Interface Comparison
 
-| Feature | Open WebUI | big-AGI | ChainForge |
-|---------|------------|---------|------------|
-| **Best For** | Production chat | Power users | Prompt engineering |
-| **Multi-Model** | Switch models | Use simultaneously | Compare side-by-side |
-| **RAG** | ✅ Built-in | ✅ Supported | ❌ |
-| **Pipelines** | ✅ Plugin system | ❌ | ❌ |
-| **Personas** | ⚠️ Basic | ✅ Advanced | ❌ |
-| **Beam Search** | ❌ | ✅ | ✅ |
-| **Flow Programming** | ❌ | ❌ | ✅ Visual |
-| **Voice I/O** | ✅ | ✅ | ❌ |
-| **Image Gen** | ✅ Via pipelines | ⚠️ Limited | ❌ |
-| **Evaluation** | ❌ | ⚠️ Basic | ✅ Advanced |
-| **Deployment** | Multiple instances | Single shared | Single shared |
+| Feature | Open WebUI | big-AGI | ChainForge | Kotaemon |
+|---------|------------|---------|------------|----------|
+| **Best For** | Production chat | Power users | Prompt engineering | Document QA |
+| **Multi-Model** | Switch models | Use simultaneously | Compare side-by-side | Switch models |
+| **RAG** | ✅ Built-in | ✅ Supported | ❌ | ✅ Primary focus |
+| **Document Upload** | ✅ | ⚠️ Limited | ❌ | ✅ Advanced |
+| **Pipelines** | ✅ Plugin system | ❌ | ❌ | ❌ |
+| **Personas** | ⚠️ Basic | ✅ Advanced | ❌ | ❌ |
+| **Beam Search** | ❌ | ✅ | ✅ | ❌ |
+| **Flow Programming** | ❌ | ❌ | ✅ Visual | ❌ |
+| **Voice I/O** | ✅ | ✅ | ❌ | ❌ |
+| **Image Gen** | ✅ Via pipelines | ⚠️ Limited | ❌ | ❌ |
+| **Evaluation** | ❌ | ⚠️ Basic | ✅ Advanced | ❌ |
+| **Citations** | ⚠️ Basic | ❌ | ❌ | ✅ Advanced |
+| **Deployment** | Multiple instances | Single shared | Single shared | Single shared |
 
 ## Documentation
 
@@ -175,7 +185,7 @@ bash 99_cleanup_docker.sh --aggressive # Remove all unused images/volumes
 
 ## Service Count
 
-- **48 deployment scripts** (01-47, 99)
-- **45+ services** available
-- **3 AI interfaces** to choose from
+- **49 deployment scripts** (01-48, 99)
+- **46+ services** available
+- **4 AI interfaces** to choose from
 - **All support `--update` flag**
