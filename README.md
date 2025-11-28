@@ -8,8 +8,8 @@ Minimal AI stack deployment scripts for Debian 12 with Docker.
 
 **Deployed Servers:**
 - **10.0.5.24** - AI Stack - `ai-24.valuechainhackers.xyz`
-- **10.0.5.26** - Nextcloud - `nextcloud-26.valuechainhackers.xyz`
-- **10.0.5.27** - Supabase - `api.supabase-27.valuechainhackers.xyz`
+- **10.0.5.26** - Nextcloud - `nextcloud.valuechainhackers.xyz`
+- **10.0.5.27** - Supabase - `supabase.valuechainhackers.xyz`
 
 ## Quick Start
 
@@ -43,21 +43,19 @@ Access via `https://ai-24.valuechainhackers.xyz`:
 2. Pull models: `docker exec -it minimal-ai-ollama ollama pull qwen2.5:3b`
 3. Pull embeddings: `docker exec -it minimal-ai-ollama ollama pull nomic-embed-text`
 
-## Nextcloud (10.0.5.26)
+## Shared Services
 
-**Access:** https://nextcloud-26.valuechainhackers.xyz
-**Admin:** admin / Nextcloudbaby100!
-**SSH:** root@10.0.5.26 (password: Nextcloudbaby100!)
+**Nextcloud (10.0.5.26):**
+- URL: https://nextcloud.valuechainhackers.xyz
+- Admin: admin / Nextcloudbaby100!
+- Native: Apache + MariaDB + Redis
+- Update: `sudo -u www-data php /var/www/nextcloud/updater/updater.phar`
 
-Direct installation (Apache + MariaDB + Redis)
-
-## Supabase (10.0.5.27)
-
-**API:** https://api.supabase-27.valuechainhackers.xyz
-**SSH:** root@10.0.5.27 (password: Supabasebaby100!)
-**DB:** PostgreSQL 15 + PostgREST + pgvector
-
-Direct installation (no Docker)
+**Supabase (10.0.5.27):**
+- URL: https://supabase.valuechainhackers.xyz
+- DB: PostgreSQL 15 + PostgREST + pgvector
+- Native install
+- Update: `bash update_shared_services.sh`
 
 ## Scripts
 
