@@ -13,19 +13,22 @@ Complete enterprise AI infrastructure with **51 deployment scripts** for Debian 
 
 ## Architecture
 
-**Shared Services** (1x deployment, N instances connect):
-- 45+ services: Ollama, Qdrant, PostgreSQL, Redis, MinIO, etc.
+**⚠️ Important**: Services are deployed on DEDICATED IPs (10.0.5.100+), not all on 10.0.5.24! See [IP_ALLOCATION.md](IP_ALLOCATION.md)
 
-**AI Interfaces** (4 options):
-- **Open WebUI** - Production AI chat (script 08 or 15)
-- **big-AGI** - Advanced multi-model interface (script 47)
-- **ChainForge** - Prompt engineering & evaluation (script 46)
-- **Kotaemon** - RAG document QA system (script 48)
+**Shared Infrastructure** (Deploy ONCE on 10.0.5.100-146):
+- ~30 truly shareable services: Ollama, Qdrant, PostgreSQL, Redis, MinIO, Gitea, etc.
+- One instance serves ALL users/teams
+- See [SHARED_SERVICES_LIMITATIONS.md](SHARED_SERVICES_LIMITATIONS.md)
+
+**Per-User/Team Services** (Deploy MULTIPLE on 10.0.5.200+):
+- AI Interfaces: Open WebUI, big-AGI, ChainForge, Kotaemon
+- Workflows: n8n (⚠️ free = 1 user), Flowise, Jupyter, code-server
+- Each user/team gets their own instance
 
 **Scalability:**
-- Deploy shared services once
-- Connect unlimited AI interface instances
-- All interfaces can use the same backend services
+- Shared services: Deploy once, connect from anywhere
+- Per-user services: Unlimited instances as needed
+- 10.0.5.24 is LEGACY deployment, new services go on dedicated IPs
 
 ## Quick Start
 
@@ -182,9 +185,10 @@ bash 99_cleanup_docker.sh --aggressive # Remove all unused images/volumes
 ## Documentation
 
 - **[SERVICE_CATALOG.md](SERVICE_CATALOG.md)** - 📖 Detailed catalog of all 51 scripts (ports, updates, features)
+- **[SHARED_SERVICES_LIMITATIONS.md](SHARED_SERVICES_LIMITATIONS.md)** - ⚠️ **Which services to share vs deploy per-user**
+- **[IP_ALLOCATION.md](IP_ALLOCATION.md)** - 🌐 Network architecture & dedicated IP assignments
 - **[DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)** - 📊 Complete infrastructure overview
 - **[SERVICES_REFERENCE.md](SERVICES_REFERENCE.md)** - 🔗 Service inventory & connection URLs
-- **[IP_ALLOCATION.md](IP_ALLOCATION.md)** - 🌐 Network architecture & IP assignments
 - **[AUTHENTICATION_STRATEGY.md](AUTHENTICATION_STRATEGY.md)** - 🔐 Auth & SSO strategy
 - [SCALING_GUIDE.md](SCALING_GUIDE.md) - Architecture patterns
 - [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Step-by-step instructions
@@ -193,9 +197,12 @@ bash 99_cleanup_docker.sh --aggressive # Remove all unused images/volumes
 ## Service Count
 
 - **51 deployment scripts** (01-48, 50-51, 99)
-- **46+ services** available
-- **4 AI interfaces** to choose from
+- **~30 truly shareable services** (deploy once on 10.0.5.100-146)
+- **~21 per-user/team services** (deploy multiple on 10.0.5.200+)
+- **4 AI interface options**
 - **All support `--update` flag**
+
+**⚠️ Critical**: Read [SHARED_SERVICES_LIMITATIONS.md](SHARED_SERVICES_LIMITATIONS.md) before deploying!
 
 ## Layer 2 Networking (Advanced)
 
