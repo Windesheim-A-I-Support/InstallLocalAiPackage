@@ -1,0 +1,36 @@
+# Sensitive files - DO NOT COMMIT
+CREDENTIALS.md
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# SSH keys
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# Password files
+*_password
+.pgpass
+.redis_password
+
+# Backup files
+*.backup
+*.bak
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

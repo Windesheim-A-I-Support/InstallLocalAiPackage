@@ -4,7 +4,21 @@ Complete enterprise AI infrastructure with **51 deployment scripts** for Debian 
 
 ## Infrastructure
 
-**Traefik:** 10.0.4.10 → `/opt/traefik-stack/dynamic`
+### Traefik Reverse Proxy (10.0.4.10)
+
+**All services route through Traefik** for SSL/TLS certificates and domain routing.
+
+**Configuration:**
+- Server: `10.0.4.10`
+- Dynamic configs: `/opt/traefik-stack/dynamic`
+- File naming: `205{last_octet}.yml` (e.g., 10.0.5.100 → `205100.yml`)
+- SSL/TLS: Automatic via Let's Encrypt
+- Configure all services: `bash 53_configure_traefik_routing.sh`
+
+**Example routing:**
+- `ollama.valuechainhackers.xyz` → `10.0.5.100:11434`
+- `qdrant.valuechainhackers.xyz` → `10.0.5.101:6333`
+- `grafana.valuechainhackers.xyz` → `10.0.5.122:3000`
 
 **Servers:**
 - **10.0.5.24** - AI Stack - `ai-24.valuechainhackers.xyz`
