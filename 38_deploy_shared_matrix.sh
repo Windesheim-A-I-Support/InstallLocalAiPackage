@@ -1,4 +1,16 @@
 #!/bin/bash
+# ==============================================================================
+# ⚠️  CRITICAL: NO DOCKER FOR SHARED SERVICES! ⚠️
+# ==============================================================================
+# SHARED SERVICES (containers 100-199) MUST BE DEPLOYED NATIVELY!
+# 
+# ❌ DO NOT USE DOCKER for shared services
+# ✅ ONLY USER CONTAINERS (200-249) can use Docker
+#
+# This service deploys NATIVELY using system packages and systemd.
+# Docker is ONLY allowed for individual user containers!
+# ==============================================================================
+
 set -e
 
 # Shared Matrix + Element chat server
@@ -10,9 +22,16 @@ POSTGRES_HOST="${2:-10.0.5.24}"
 POSTGRES_PASS="${3}"
 SERVER_NAME="${4:-matrix.valuechainhackers.xyz}"
 
+# Debian 12 compatibility checks
 if [ "$EUID" -ne 0 ]; then
   echo "❌ Run as root"
   exit 1
+fi
+
+# Check if running on Debian 12
+if ! grep -q "Debian GNU/Linux 12" /etc/os-release 2>/dev/null; then
+  echo "⚠️  Warning: This script is optimized for Debian 12"
+  echo "Current OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
 fi
 
 if [ -z "$POSTGRES_PASS" ] && [ "$1" != "--update" ]; then

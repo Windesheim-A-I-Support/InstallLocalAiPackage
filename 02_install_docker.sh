@@ -63,26 +63,15 @@ echo \
 
 apt-get update -q
 
-# 5. CONFIGURE STORAGE DRIVER BASED ON CONTAINER TYPE
+# 5. CONFIGURE DOCKER DAEMON (USE DOCKER DEFAULTS FOR STORAGE DRIVER)
 echo "--> [4/7] Configuring Docker daemon..."
 mkdir -p /etc/docker
 
-# Check if overlay2 is available (even in unprivileged containers)
-OVERLAY_AVAILABLE=false
-if modprobe overlay 2>/dev/null && [ -d /sys/module/overlay ]; then
-    OVERLAY_AVAILABLE=true
-fi
-
-if [ "$CONTAINER_TYPE" = "unprivileged" ]; then
-    if [ "$OVERLAY_AVAILABLE" = true ]; then
-        echo "✅ Unprivileged container with overlay2 support detected!"
-        echo "   Using Overlay2 storage driver (FAST mode)"
-        cat > /etc/docker/daemon.json <<EOF
+# Let Docker choose the best available storage driver automatically
+# For LXC containers, Docker will pick overlay2 or fuse-overlayfs depending on what's available
+echo "✅ Using Docker's default storage driver (auto-detect)"
+cat > /etc/docker/daemon.json <<EOF
 {
-  "storage-driver": "overlay2",
-  "storage-opts": [
-    "overlay2.override_kernel_check=true"
-  ],
   "log-driver": "json-file",
   "log-opts": {
     "max-size": "10m",
@@ -90,33 +79,6 @@ if [ "$CONTAINER_TYPE" = "unprivileged" ]; then
   }
 }
 EOF
-    else
-        echo "⚠️  Unprivileged container: Using VFS storage driver"
-        echo "   (Slower - to enable overlay2, configure LXC container)"
-        cat > /etc/docker/daemon.json <<EOF
-{
-  "storage-driver": "vfs",
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "3"
-  }
-}
-EOF
-    fi
-else
-    echo "✅ Privileged container: Using Overlay2 storage driver"
-    cat > /etc/docker/daemon.json <<EOF
-{
-  "storage-driver": "overlay2",
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "3"
-  }
-}
-EOF
-fi
 
 # 6. INSTALL DOCKER (VERSION BASED ON CONTAINER TYPE)
 echo "--> [5/7] Installing Docker..."
@@ -141,7 +103,7 @@ if [ "$CONTAINER_TYPE" = "unprivileged" ]; then
     echo "📦 Installing Docker for UNPRIVILEGED container..."
     echo "   • Docker CE: Latest compatible"
     echo "   • containerd.io: $CONTAINERD_VERSION (LXC-safe)"
-    echo "   • Storage driver: VFS"
+    echo "   • Storage driver: Auto-detect (overlay2/fuse-overlayfs)"
 
     if [ -n "$CONTAINERD_VERSION" ]; then
         apt-get install -y -q \
@@ -295,12 +257,12 @@ echo "---------------------------------------------------------"
 
 if [ "$CONTAINER_TYPE" = "unprivileged" ]; then
     echo "⚠️  IMPORTANT NOTES FOR UNPRIVILEGED CONTAINERS:"
-    echo "   • Using VFS storage (slower but compatible)"
+    echo "   • Using auto-detected storage driver (overlay2/fuse-overlayfs)"
     echo "   • Docker version locked to prevent upgrades"
     echo "   • Some features may be limited"
 else
     echo "✅ PRIVILEGED CONTAINER:"
-    echo "   • Using Overlay2 storage (fast)"
+    echo "   • Using auto-detected storage driver (typically overlay2)"
     echo "   • Full Docker features available"
 fi
 

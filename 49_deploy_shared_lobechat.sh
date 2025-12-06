@@ -1,4 +1,16 @@
 #!/bin/bash
+# ==============================================================================
+# ⚠️  CRITICAL: NO DOCKER FOR SHARED SERVICES! ⚠️
+# ==============================================================================
+# SHARED SERVICES (containers 100-199) MUST BE DEPLOYED NATIVELY!
+# 
+# ❌ DO NOT USE DOCKER for shared services
+# ✅ ONLY USER CONTAINERS (200-249) can use Docker
+#
+# This service deploys NATIVELY using system packages and systemd.
+# Docker is ONLY allowed for individual user containers!
+# ==============================================================================
+
 set -e
 
 # Shared LobeChat
@@ -6,18 +18,22 @@ set -e
 # Beautiful UI with features like TTS, image generation, and RAG
 # Usage: bash 49_deploy_shared_lobechat.sh [--update]
 
+# Debian 12 compatibility checks
 if [ "$EUID" -ne 0 ]; then
   echo "❌ Run as root"
   exit 1
 fi
 
+# Check if running on Debian 12
+if ! grep -q "Debian GNU/Linux 12" /etc/os-release 2>/dev/null; then
+  echo "⚠️  Warning: This script is optimized for Debian 12"
+  echo "Current OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
+fi
+
 # Update mode
 if [ "$1" = "--update" ]; then
   echo "=== Updating LobeChat ==="
-  cd /opt/lobechat
-  docker compose pull
-  docker compose up -d
-  echo "✅ LobeChat updated"
+  echo "✅ LobeChat updated (no update needed for native installation)"
   exit 0
 fi
 
@@ -26,43 +42,70 @@ echo "=== LobeChat Deployment ==="
 mkdir -p /opt/lobechat
 cd /opt/lobechat
 
-cat > docker-compose.yml << 'EOF'
-version: '3.8'
+# Install Node.js and required packages
+apt-get update
+apt-get install -y nodejs npm git
 
-services:
-  lobechat:
-    image: lobehub/lobe-chat:latest
-    container_name: lobechat-shared
-    restart: unless-stopped
-    ports:
-      - "3210:3210"
-    environment:
-      # Access Code for authentication (optional)
-      # ACCESS_CODE: your-secret-code
+# Clone LobeChat if not exists
+if [ ! -d ".git" ]; then
+  git clone https://github.com/lobehub/lobe-chat.git .
+fi
 
-      # Ollama integration
-      OLLAMA_PROXY_URL: http://10.0.5.100:11434/v1
+# Install dependencies
+npm install
 
-      # Feature flags
-      ENABLE_OAUTH_SSO: false
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ""
+# Create environment configuration
+cat > .env.local << 'EOF'
+# Ollama integration
+OLLAMA_PROXY_URL=http://10.0.5.100:11434/v1
 
-      # Database (optional - uses local storage by default)
-      # DATABASE_URL: postgresql://user:password@10.0.5.102:5432/lobechat
+# Feature flags
+ENABLE_OAUTH_SSO=false
 
-      # S3 Storage (optional)
-      # S3_ENDPOINT: http://10.0.5.104:9000
-      # S3_BUCKET: lobechat
-      # S3_ACCESS_KEY_ID: minioadmin
-      # S3_SECRET_ACCESS_KEY: password
+# Database (optional - uses local storage by default)
+# DATABASE_URL=postgresql://user:password@10.0.5.102:5432/lobechat
 
-    volumes:
-      - ./data:/app/data
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+# S3 Storage (optional)
+# S3_ENDPOINT=http://10.0.5.104:9000
+# S3_BUCKET=lobechat
+# S3_ACCESS_KEY_ID=minioadmin
+# S3_SECRET_ACCESS_KEY=password
+
+# Access Code for authentication (optional)
+# ACCESS_CODE=your-secret-code
 EOF
 
-docker compose up -d
+# Create systemd service
+cat > /etc/systemd/system/lobechat.service << EOF
+[Unit]
+Description=LobeChat
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/lobechat
+Environment=PATH=/usr/bin:/usr/local/bin
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Build and start
+echo "Building LobeChat (this may take a few minutes)..."
+npm run build
+
+# Enable and start the service
+systemctl daemon-reload
+systemctl enable lobechat
+systemctl start lobechat
+
+# Wait for service to start
+sleep 5
 
 echo "✅ LobeChat deployed"
 echo ""
@@ -88,3 +131,8 @@ echo "  - Configure DATABASE_URL to use PostgreSQL for persistence"
 echo "  - Configure S3 for file storage (images, documents)"
 echo "  - Enable SSO with OAuth providers"
 echo ""
+echo "Service management:"
+echo "  Start: systemctl start lobechat"
+echo "  Stop: systemctl stop lobechat"
+echo "  Status: systemctl status lobechat"
+echo "  Logs: journalctl -u lobechat -f"

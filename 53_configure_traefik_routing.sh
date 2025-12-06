@@ -6,7 +6,14 @@ set -e
 # Naming: 205{last_octet}.yml (e.g., 205100.yml for 10.0.5.100)
 # Usage: bash 53_configure_traefik_routing.sh
 
+# Debian 12 compatibility checks
 # Root check removed - uses SSH to configure remote Traefik server
+
+# Check if running on Debian 12
+if ! grep -q "Debian GNU/Linux 12" /etc/os-release 2>/dev/null; then
+  echo "⚠️  Warning: This script is optimized for Debian 12"
+  echo "Current OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
+fi
 
 echo "=== Traefik Dynamic Configuration Generator ==="
 echo ""

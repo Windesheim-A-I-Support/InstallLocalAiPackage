@@ -1,4 +1,16 @@
 #!/bin/bash
+# ==============================================================================
+# ⚠️  CRITICAL: NO DOCKER FOR SHARED SERVICES! ⚠️
+# ==============================================================================
+# SHARED SERVICES (containers 100-199) MUST BE DEPLOYED NATIVELY!
+# 
+# ❌ DO NOT USE DOCKER for shared services
+# ✅ ONLY USER CONTAINERS (200-249) can use Docker
+#
+# This service deploys NATIVELY using system packages and systemd.
+# Docker is ONLY allowed for individual user containers!
+# ==============================================================================
+
 set -e
 
 # Shared Qdrant vector database (native install)

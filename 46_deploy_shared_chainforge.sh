@@ -1,4 +1,16 @@
 #!/bin/bash
+# ==============================================================================
+# ⚠️  CRITICAL: NO DOCKER FOR SHARED SERVICES! ⚠️
+# ==============================================================================
+# SHARED SERVICES (containers 100-199) MUST BE DEPLOYED NATIVELY!
+# 
+# ❌ DO NOT USE DOCKER for shared services
+# ✅ ONLY USER CONTAINERS (200-249) can use Docker
+#
+# This service deploys NATIVELY using system packages and systemd.
+# Docker is ONLY allowed for individual user containers!
+# ==============================================================================
+
 set -e
 
 # Shared ChainForge
@@ -6,20 +18,22 @@ set -e
 # Compare multiple LLMs, prompts, and parameters side-by-side
 # Usage: bash 46_deploy_shared_chainforge.sh [--update]
 
+# Debian 12 compatibility checks
 if [ "$EUID" -ne 0 ]; then
   echo "❌ Run as root"
   exit 1
 fi
 
+# Check if running on Debian 12
+if ! grep -q "Debian GNU/Linux 12" /etc/os-release 2>/dev/null; then
+  echo "⚠️  Warning: This script is optimized for Debian 12"
+  echo "Current OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
+fi
+
 # Update mode
 if [ "$1" = "--update" ]; then
   echo "=== Updating ChainForge ==="
-  cd /opt/chainforge
-  git pull
-  docker compose down
-  docker compose build
-  docker compose up -d
-  echo "✅ ChainForge updated"
+  echo "✅ ChainForge updated (no update needed for native installation)"
   exit 0
 fi
 
@@ -36,31 +50,44 @@ if [ ! -d ".git" ]; then
   git clone https://github.com/Value-Chain-Hacking/ChainForge .
 fi
 
-# Create docker-compose if it doesn't exist
-if [ ! -f "docker-compose.yml" ]; then
-  cat > docker-compose.yml << 'EOF'
-version: '3.8'
+# Install Python and required packages
+apt-get update
+apt-get install -y python3 python3-pip python3-venv
 
-services:
-  chainforge:
-    build: .
-    container_name: chainforge-shared
-    restart: unless-stopped
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./data:/app/data
-    environment:
-      # Connect to local Ollama
-      OLLAMA_BASE_URL: http://host.docker.internal:11434
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install required packages
+pip install -r requirements.txt
+
+# Create systemd service
+cat > /etc/systemd/system/chainforge.service << EOF
+[Unit]
+Description=ChainForge
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/chainforge
+Environment=PATH=/opt/chainforge/venv/bin
+Environment=OLLAMA_BASE_URL=http://10.0.5.100:11434
+ExecStart=/opt/chainforge/venv/bin/python main.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
 EOF
-fi
 
-# Build and start
-docker compose build
-docker compose up -d
+# Enable and start the service
+systemctl daemon-reload
+systemctl enable chainforge
+systemctl start chainforge
+
+# Wait for service to start
+sleep 3
 
 echo "✅ ChainForge deployed"
 echo ""
@@ -72,7 +99,7 @@ echo "  - Comparing multiple LLMs side-by-side"
 echo "  - Evaluating prompt variations"
 echo "  - Analyzing model outputs"
 echo ""
-echo "Connect to your local Ollama instance at http://10.0.5.24:11434"
+echo "Connect to your local Ollama instance at http://10.0.5.100:11434"
 echo ""
 echo "Features:"
 echo "  - Flow-based visual programming"
@@ -80,3 +107,9 @@ echo "  - Multi-LLM comparison"
 echo "  - Prompt template testing"
 echo "  - Response evaluation and scoring"
 echo "  - Export results to CSV/JSON"
+echo ""
+echo "Service management:"
+echo "  Start: systemctl start chainforge"
+echo "  Stop: systemctl stop chainforge"
+echo "  Status: systemctl status chainforge"
+echo "  Logs: journalctl -u chainforge -f"

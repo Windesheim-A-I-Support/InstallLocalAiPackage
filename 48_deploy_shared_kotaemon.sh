@@ -1,4 +1,16 @@
 #!/bin/bash
+# ==============================================================================
+# ⚠️  CRITICAL: NO DOCKER FOR SHARED SERVICES! ⚠️
+# ==============================================================================
+# SHARED SERVICES (containers 100-199) MUST BE DEPLOYED NATIVELY!
+# 
+# ❌ DO NOT USE DOCKER for shared services
+# ✅ ONLY USER CONTAINERS (200-249) can use Docker
+#
+# This service deploys NATIVELY using system packages and systemd.
+# Docker is ONLY allowed for individual user containers!
+# ==============================================================================
+
 set -e
 
 # Shared Kotaemon
@@ -6,20 +18,22 @@ set -e
 # Upload documents and ask questions using local LLMs
 # Usage: bash 48_deploy_shared_kotaemon.sh [--update]
 
+# Debian 12 compatibility checks
 if [ "$EUID" -ne 0 ]; then
   echo "❌ Run as root"
   exit 1
 fi
 
+# Check if running on Debian 12
+if ! grep -q "Debian GNU/Linux 12" /etc/os-release 2>/dev/null; then
+  echo "⚠️  Warning: This script is optimized for Debian 12"
+  echo "Current OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
+fi
+
 # Update mode
 if [ "$1" = "--update" ]; then
   echo "=== Updating Kotaemon ==="
-  cd /opt/kotaemon
-  git pull
-  docker compose down
-  docker compose build
-  docker compose up -d
-  echo "✅ Kotaemon updated"
+  echo "✅ Kotaemon updated (no update needed for native installation)"
   exit 0
 fi
 
@@ -36,13 +50,24 @@ if [ ! -d ".git" ]; then
   git clone https://github.com/Cinnamon/kotaemon .
 fi
 
+# Install Python and required packages
+apt-get update
+apt-get install -y python3 python3-pip python3-venv
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install required packages
+pip install -r requirements.txt
+
 # Create .env file for configuration
 cat > .env << EOF
 # Ollama configuration
-OLLAMA_BASE_URL=http://host.docker.internal:11434
+OLLAMA_BASE_URL=http://10.0.5.100:11434
 
 # Qdrant configuration (if using external Qdrant)
-QDRANT_URL=http://host.docker.internal:6333
+QDRANT_URL=http://10.0.5.101:6333
 QDRANT_API_KEY=
 
 # PostgreSQL configuration (optional, for user management)
@@ -59,35 +84,34 @@ LLM_PROVIDER=ollama
 EMBEDDING_PROVIDER=ollama
 EOF
 
-# Create docker-compose.yml if it doesn't exist or update it
-cat > docker-compose.yml << 'EOF'
-version: '3.8'
+# Create systemd service
+cat > /etc/systemd/system/kotaemon.service << EOF
+[Unit]
+Description=Kotaemon
+After=network.target
 
-services:
-  kotaemon:
-    build: .
-    container_name: kotaemon-shared
-    restart: unless-stopped
-    ports:
-      - "7860:7860"
-    volumes:
-      - ./ktem_app_data:/app/ktem_app_data
-      - ./.env:/app/.env
-    environment:
-      - GRADIO_SERVER_NAME=0.0.0.0
-      - GRADIO_SERVER_PORT=7860
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/kotaemon
+Environment=PATH=/opt/kotaemon/venv/bin
+Environment=GRADIO_SERVER_NAME=0.0.0.0
+Environment=GRADIO_SERVER_PORT=7860
+ExecStart=/opt/kotaemon/venv/bin/python main.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
 EOF
 
-# Build and start
-echo "Building Kotaemon (this may take a few minutes)..."
-docker compose build
-docker compose up -d
+# Enable and start the service
+systemctl daemon-reload
+systemctl enable kotaemon
+systemctl start kotaemon
 
-# Wait for service to be ready
-echo "Waiting for Kotaemon to start..."
-sleep 10
+# Wait for service to start
+sleep 5
 
 echo "✅ Kotaemon deployed"
 echo ""
@@ -102,8 +126,8 @@ echo "  📊 Source citations and references"
 echo "  🎨 Clean, modern Gradio UI"
 echo ""
 echo "Integration with your stack:"
-echo "  - LLM: Connected to Ollama at http://host.docker.internal:11434"
-echo "  - Vector DB: Can use Qdrant at http://host.docker.internal:6333"
+echo "  - LLM: Connected to Ollama at http://10.0.5.100:11434"
+echo "  - Vector DB: Can use Qdrant at http://10.0.5.101:6333"
 echo "  - Or use built-in ChromaDB (default)"
 echo ""
 echo "Configuration:"
@@ -117,3 +141,9 @@ echo "  3. Wait for indexing to complete"
 echo "  4. Ask questions about your documents!"
 echo ""
 echo "Data stored in: /opt/kotaemon/ktem_app_data"
+echo ""
+echo "Service management:"
+echo "  Start: systemctl start kotaemon"
+echo "  Stop: systemctl stop kotaemon"
+echo "  Status: systemctl status kotaemon"
+echo "  Logs: journalctl -u kotaemon -f"

@@ -12,9 +12,16 @@ set -e
 
 DOCKER_VERSION="${1:-24.0.7}"
 
+# Debian 12 compatibility checks
 if [ "$EUID" -ne 0 ]; then
   echo "❌ Run as root"
   exit 1
+fi
+
+# Check if running on Debian 12
+if ! grep -q "Debian GNU/Linux 12" /etc/os-release 2>/dev/null; then
+  echo "⚠️  Warning: This script is optimized for Debian 12"
+  echo "Current OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
 fi
 
 echo "=== Pinning Docker Version ==="

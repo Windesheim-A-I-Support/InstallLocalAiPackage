@@ -12,9 +12,16 @@ set -e
 USERNAME="${1}"
 USER_NUM="${2}"
 
+# Debian 12 compatibility checks
 if [ "$EUID" -ne 0 ]; then
   echo "❌ Run as root"
   exit 1
+fi
+
+# Check if running on Debian 12
+if ! grep -q "Debian GNU/Linux 12" /etc/os-release 2>/dev/null; then
+  echo "⚠️  Warning: This script is optimized for Debian 12"
+  echo "Current OS: $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2)"
 fi
 
 if [ -z "$USERNAME" ] || [ -z "$USER_NUM" ]; then
@@ -106,207 +113,308 @@ EOF
 
 chmod 600 secrets.txt
 
-echo "Generating docker-compose.yml for all user services..."
+echo "Generating native installation for all user services..."
 
-# Create comprehensive docker-compose with all 8 services
-cat > docker-compose.yml << EOF
-version: '3.8'
+# Install Python and required packages
+apt-get update
+apt-get install -y python3 python3-pip python3-venv git
 
-services:
-  # 1. Open WebUI - Primary AI chat interface
-  openwebui:
-    image: ghcr.io/open-webui/open-webui:main
-    container_name: openwebui-${USERNAME}
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    environment:
-      # Shared services
-      OLLAMA_BASE_URL: http://10.0.5.100:11434
-      VECTOR_DB: qdrant
-      QDRANT_URI: http://10.0.5.101:6333
-      QDRANT_COLLECTION: ${USERNAME}_collection
-
-      # Database - dedicated DB in shared PostgreSQL
-      DATABASE_URL: postgresql://dbadmin:POSTGRES_PASSWORD_HERE@10.0.5.102:5432/${USERNAME}_db
-
-      # Redis for caching
-      REDIS_URL: redis://:REDIS_PASSWORD_HERE@10.0.5.103:6379/0
-
-      # Authentication
-      WEBUI_AUTH: "true"
-      WEBUI_SECRET_KEY: ${WEBUI_SECRET}
-      ENABLE_SIGNUP: "true"
-      DEFAULT_USER_ROLE: "user"
-
-      # RAG settings
-      ENABLE_RAG_WEB_SEARCH: "true"
-      RAG_EMBEDDING_ENGINE: ollama
-      RAG_EMBEDDING_MODEL: nomic-embed-text:latest
-      ENABLE_RAG_WEB_LOADER_SSL_VERIFICATION: "false"
-
-      # Search integration
-      SEARXNG_QUERY_URL: http://10.0.5.105:8080/search?q=<query>
-
-      # Features
-      ENABLE_IMAGE_GENERATION: "false"
-      ENABLE_COMMUNITY_SHARING: "false"
-    volumes:
-      - ./openwebui-data:/app/backend/data
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - usernetwork
-
-  # 2. n8n - Workflow automation
-  n8n:
-    image: n8nio/n8n:latest
-    container_name: n8n-${USERNAME}
-    restart: unless-stopped
-    ports:
-      - "5678:5678"
-    environment:
-      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
-      DB_TYPE: postgresdb
-      DB_POSTGRESDB_HOST: 10.0.5.102
-      DB_POSTGRESDB_PORT: 5432
-      DB_POSTGRESDB_DATABASE: ${USERNAME}_n8n
-      DB_POSTGRESDB_USER: dbadmin
-      DB_POSTGRESDB_PASSWORD: POSTGRES_PASSWORD_HERE
-      N8N_DIAGNOSTICS_ENABLED: "false"
-      N8N_PERSONALIZATION_ENABLED: "true"
-      WEBHOOK_URL: http://${USER_IP}:5678/
-    volumes:
-      - ./n8n-data:/home/node/.n8n
-    networks:
-      - usernetwork
-
-  # 3. Jupyter Lab - Data science notebooks
-  jupyter:
-    image: jupyter/datascience-notebook:latest
-    container_name: jupyter-${USERNAME}
-    restart: unless-stopped
-    ports:
-      - "8888:8888"
-    environment:
-      JUPYTER_ENABLE_LAB: "yes"
-      JUPYTER_TOKEN: ${JUPYTER_TOKEN}
-      GRANT_SUDO: "yes"
-    volumes:
-      - ./jupyter-notebooks:/home/jovyan/work
-    user: root
-    command: start-notebook.sh --NotebookApp.token='${JUPYTER_TOKEN}'
-    networks:
-      - usernetwork
-
-  # 4. code-server - VS Code in browser
-  code-server:
-    image: lscr.io/linuxserver/code-server:latest
-    container_name: code-server-${USERNAME}
-    restart: unless-stopped
-    ports:
-      - "8443:8443"
-    environment:
-      PUID: 1000
-      PGID: 1000
-      PASSWORD: ${CODE_SERVER_PASSWORD}
-      SUDO_PASSWORD: ${CODE_SERVER_PASSWORD}
-    volumes:
-      - ./code-server-config:/config
-      - ./code-server-projects:/config/workspace
-    networks:
-      - usernetwork
-
-  # 5. big-AGI - Advanced AI interface
-  big-agi:
-    image: ghcr.io/enricoros/big-agi:latest
-    container_name: big-agi-${USERNAME}
-    restart: unless-stopped
-    ports:
-      - "3012:3000"
-    environment:
-      OLLAMA_API_HOST: http://10.0.5.100:11434
-    networks:
-      - usernetwork
-
-  # 6. ChainForge - Prompt engineering tool
-  chainforge:
-    image: chainforge/chainforge:latest
-    container_name: chainforge-${USERNAME}
-    restart: unless-stopped
-    ports:
-      - "8000:8000"
-    environment:
-      OLLAMA_BASE_URL: http://10.0.5.100:11434
-    volumes:
-      - ./chainforge-data:/app/data
-    networks:
-      - usernetwork
-
-  # 7. Kotaemon - RAG document QA
-  kotaemon:
-    image: cinnamon/kotaemon:latest
-    container_name: kotaemon-${USERNAME}
-    restart: unless-stopped
-    ports:
-      - "7860:7860"
-    environment:
-      OLLAMA_BASE_URL: http://10.0.5.100:11434
-      QDRANT_URL: http://10.0.5.101:6333
-      QDRANT_COLLECTION: ${USERNAME}_kotaemon
-      GRADIO_SERVER_NAME: 0.0.0.0
-      GRADIO_SERVER_PORT: 7860
-      KT_ENABLE_AUTH: "False"
-      KT_ENABLE_SIGNUP: "True"
-    volumes:
-      - ./kotaemon-data:/app/ktem_app_data
-    networks:
-      - usernetwork
-
-  # 8. Flowise - AI workflow builder
-  flowise:
-    image: flowiseai/flowise:latest
-    container_name: flowise-${USERNAME}
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      FLOWISE_USERNAME: admin
-      FLOWISE_PASSWORD: ${FLOWISE_PASSWORD}
-      DATABASE_TYPE: postgres
-      DATABASE_HOST: 10.0.5.102
-      DATABASE_PORT: 5432
-      DATABASE_USER: dbadmin
-      DATABASE_PASSWORD: POSTGRES_PASSWORD_HERE
-      DATABASE_NAME: ${USERNAME}_flowise
-    volumes:
-      - ./flowise-data:/root/.flowise
-    networks:
-      - usernetwork
-
-networks:
-  usernetwork:
-    driver: bridge
-
-volumes:
-  openwebui-data:
-  n8n-data:
-  jupyter-notebooks:
-  code-server-config:
-  code-server-projects:
-  chainforge-data:
-  kotaemon-data:
-  flowise-data:
+# 1. Open WebUI
+echo "Setting up Open WebUI..."
+mkdir -p openwebui
+cd openwebui
+python3 -m venv venv
+source venv/bin/activate
+pip install open-webui
+cat > config.py << EOF
+OLLAMA_BASE_URL = "http://10.0.5.100:11434"
+VECTOR_DB = "qdrant"
+QDRANT_URI = "http://10.0.5.101:6333"
+QDRANT_COLLECTION = "${USERNAME}_collection"
+DATABASE_URL = "postgresql://dbadmin:POSTGRES_PASSWORD_HERE@10.0.5.102:5432/${USERNAME}_db"
+REDIS_URL = "redis://:REDIS_PASSWORD_HERE@10.0.5.103:6379/0"
+WEBUI_AUTH = True
+WEBUI_SECRET_KEY = "${WEBUI_SECRET}"
+ENABLE_SIGNUP = True
+DEFAULT_USER_ROLE = "user"
+ENABLE_RAG_WEB_SEARCH = True
+RAG_WEB_SEARCH_ENGINE = "searxng"
+SEARXNG_QUERY_URL = "http://10.0.5.105:8080/search?q=<query>"
 EOF
 
-echo "✅ docker-compose.yml created"
+# 2. n8n
+echo "Setting up n8n..."
+mkdir -p ../n8n
+cd ../n8n
+python3 -m venv venv
+source venv/bin/activate
+pip install n8n
+cat > config.py << EOF
+N8N_ENCRYPTION_KEY = "${N8N_ENCRYPTION_KEY}"
+DB_TYPE = "postgresdb"
+DB_POSTGRESDB_HOST = "10.0.5.102"
+DB_POSTGRESDB_PORT = 5432
+DB_POSTGRESDB_DATABASE = "${USERNAME}_n8n"
+DB_POSTGRESDB_USER = "dbadmin"
+DB_POSTGRESDB_PASSWORD = "POSTGRES_PASSWORD_HERE"
+N8N_DIAGNOSTICS_ENABLED = False
+N8N_PERSONALIZATION_ENABLED = True
+WEBHOOK_URL = "http://${USER_IP}:5678/"
+EOF
+
+# 3. Jupyter Lab
+echo "Setting up Jupyter Lab..."
+mkdir -p ../jupyter
+cd ../jupyter
+python3 -m venv venv
+source venv/bin/activate
+pip install jupyter jupyterlab
+cat > jupyter_config.py << EOF
+c.ServerApp.ip = "0.0.0.0"
+c.ServerApp.port = 8888
+c.ServerApp.token = "${JUPYTER_TOKEN}"
+c.ServerApp.password = ""
+c.ServerApp.open_browser = False
+c.ServerApp.allow_origin = "*"
+EOF
+
+# 4. code-server
+echo "Setting up code-server..."
+apt-get install -y nodejs npm
+npm install -g code-server
+cat > code-server-config.yaml << EOF
+bind-addr: 0.0.0.0:8443
+auth: password
+password: ${CODE_SERVER_PASSWORD}
+cert: false
+EOF
+
+# 5. big-AGI
+echo "Setting up big-AGI..."
+mkdir -p ../big-agi
+cd ../big-agi
+python3 -m venv venv
+source venv/bin/activate
+pip install big-agi
+cat > config.py << EOF
+OLLAMA_API_HOST = "http://10.0.5.100:11434"
+EOF
+
+# 6. ChainForge
+echo "Setting up ChainForge..."
+mkdir -p ../chainforge
+cd ../chainforge
+python3 -m venv venv
+source venv/bin/activate
+pip install chainforge
+cat > config.py << EOF
+OLLAMA_BASE_URL = "http://10.0.5.100:11434"
+EOF
+
+# 7. Kotaemon
+echo "Setting up Kotaemon..."
+mkdir -p ../kotaemon
+cd ../kotaemon
+python3 -m venv venv
+source venv/bin/activate
+pip install kotaemon
+cat > config.py << EOF
+OLLAMA_BASE_URL = "http://10.0.5.100:11434"
+QDRANT_URL = "http://10.0.5.101:6333"
+QDRANT_COLLECTION = "${USERNAME}_kotaemon"
+GRADIO_SERVER_NAME = "0.0.0.0"
+GRADIO_SERVER_PORT = 7860
+KT_ENABLE_AUTH = False
+KT_ENABLE_SIGNUP = True
+EOF
+
+# 8. Flowise
+echo "Setting up Flowise..."
+mkdir -p ../flowise
+cd ../flowise
+python3 -m venv venv
+source venv/bin/activate
+pip install flowise
+cat > config.py << EOF
+FLOWISE_USERNAME = "admin"
+FLOWISE_PASSWORD = "${FLOWISE_PASSWORD}"
+DATABASE_TYPE = "postgres"
+DATABASE_HOST = "10.0.5.102"
+DATABASE_PORT = 5432
+DATABASE_USER = "dbadmin"
+DATABASE_PASSWORD = "POSTGRES_PASSWORD_HERE"
+DATABASE_NAME = "${USERNAME}_flowise"
+EOF
+
+# Create systemd services
+echo "Creating systemd services..."
+
+# Open WebUI service
+cat > /etc/systemd/system/openwebui-${USERNAME}.service << EOF
+[Unit]
+Description=Open WebUI for ${USERNAME}
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/users/${USERNAME}/openwebui
+Environment=PATH=/opt/users/${USERNAME}/openwebui/venv/bin
+ExecStart=/opt/users/${USERNAME}/openwebui/venv/bin/python -m open_webui
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# n8n service
+cat > /etc/systemd/system/n8n-${USERNAME}.service << EOF
+[Unit]
+Description=n8n for ${USERNAME}
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/users/${USERNAME}/n8n
+Environment=PATH=/opt/users/${USERNAME}/n8n/venv/bin
+ExecStart=/opt/users/${USERNAME}/n8n/venv/bin/python -m n8n
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Jupyter service
+cat > /etc/systemd/system/jupyter-${USERNAME}.service << EOF
+[Unit]
+Description=Jupyter Lab for ${USERNAME}
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/users/${USERNAME}/jupyter
+Environment=PATH=/opt/users/${USERNAME}/jupyter/venv/bin
+ExecStart=/opt/users/${USERNAME}/jupyter/venv/bin/jupyter lab --config=/opt/users/${USERNAME}/jupyter/jupyter_config.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# code-server service
+cat > /etc/systemd/system/code-server-${USERNAME}.service << EOF
+[Unit]
+Description=code-server for ${USERNAME}
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/users/${USERNAME}
+ExecStart=/usr/bin/code-server --config=/opt/users/${USERNAME}/code-server-config.yaml
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# big-AGI service
+cat > /etc/systemd/system/big-agi-${USERNAME}.service << EOF
+[Unit]
+Description=big-AGI for ${USERNAME}
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/users/${USERNAME}/big-agi
+Environment=PATH=/opt/users/${USERNAME}/big-agi/venv/bin
+ExecStart=/opt/users/${USERNAME}/big-agi/venv/bin/python -m big_agi
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# ChainForge service
+cat > /etc/systemd/system/chainforge-${USERNAME}.service << EOF
+[Unit]
+Description=ChainForge for ${USERNAME}
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/users/${USERNAME}/chainforge
+Environment=PATH=/opt/users/${USERNAME}/chainforge/venv/bin
+ExecStart=/opt/users/${USERNAME}/chainforge/venv/bin/python -m chainforge
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Kotaemon service
+cat > /etc/systemd/system/kotaemon-${USERNAME}.service << EOF
+[Unit]
+Description=Kotaemon for ${USERNAME}
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/users/${USERNAME}/kotaemon
+Environment=PATH=/opt/users/${USERNAME}/kotaemon/venv/bin
+ExecStart=/opt/users/${USERNAME}/kotaemon/venv/bin/python -m kotaemon
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Flowise service
+cat > /etc/systemd/system/flowise-${USERNAME}.service << EOF
+[Unit]
+Description=Flowise for ${USERNAME}
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/users/${USERNAME}/flowise
+Environment=PATH=/opt/users/${USERNAME}/flowise/venv/bin
+ExecStart=/opt/users/${USERNAME}/flowise/venv/bin/python -m flowise
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Enable all services
+systemctl daemon-reload
+systemctl enable openwebui-${USERNAME} n8n-${USERNAME} jupyter-${USERNAME} code-server-${USERNAME} big-agi-${USERNAME} chainforge-${USERNAME} kotaemon-${USERNAME} flowise-${USERNAME}
+
+# Start all services
+systemctl start openwebui-${USERNAME} n8n-${USERNAME} jupyter-${USERNAME} code-server-${USERNAME} big-agi-${USERNAME} chainforge-${USERNAME} kotaemon-${USERNAME} flowise-${USERNAME}
+
+echo "✅ All services deployed"
 echo ""
-echo "⚠️  IMPORTANT: You must edit docker-compose.yml and replace:"
+echo "⚠️  IMPORTANT: You must edit configuration files and replace:"
 echo "     - POSTGRES_PASSWORD_HERE with the actual PostgreSQL password"
 echo "     - REDIS_PASSWORD_HERE with the actual Redis password"
 echo ""
 echo "Next steps:"
-echo "  1. Edit docker-compose.yml with correct passwords"
+echo "  1. Edit configuration files in /opt/users/${USERNAME}/* directories"
 echo "  2. Create user-specific databases in PostgreSQL:"
 echo "     - ${USERNAME}_db (for Open WebUI)"
 echo "     - ${USERNAME}_n8n (for n8n)"
@@ -315,7 +423,6 @@ echo "  3. Create Qdrant collections:"
 echo "     - ${USERNAME}_collection (for Open WebUI)"
 echo "     - ${USERNAME}_kotaemon (for Kotaemon)"
 echo "  4. Create MinIO bucket: ${USERNAME}-bucket"
-echo "  5. Run: cd /opt/users/${USERNAME} && docker compose up -d"
 echo ""
 echo "User credentials saved to: /opt/users/${USERNAME}/secrets.txt"
 echo ""
@@ -329,3 +436,8 @@ echo "  ChainForge:   http://${USER_IP}:8000"
 echo "  Kotaemon:     http://${USER_IP}:7860"
 echo "  Flowise:      http://${USER_IP}:3000"
 echo ""
+echo "Service management:"
+echo "  Start all: systemctl start openwebui-${USERNAME} n8n-${USERNAME} jupyter-${USERNAME} code-server-${USERNAME} big-agi-${USERNAME} chainforge-${USERNAME} kotaemon-${USERNAME} flowise-${USERNAME}"
+echo "  Stop all: systemctl stop openwebui-${USERNAME} n8n-${USERNAME} jupyter-${USERNAME} code-server-${USERNAME} big-agi-${USERNAME} chainforge-${USERNAME} kotaemon-${USERNAME} flowise-${USERNAME}"
+echo "  Status all: systemctl status openwebui-${USERNAME} n8n-${USERNAME} jupyter-${USERNAME} code-server-${USERNAME} big-agi-${USERNAME} chainforge-${USERNAME} kotaemon-${USERNAME} flowise-${USERNAME}"
+echo "  Logs: journalctl -u openwebui-${USERNAME} -f"
