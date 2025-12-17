@@ -52,19 +52,19 @@ Last Updated: 2025-11-30
 
 | # | Script | Service | IP | Port(s) | Sharing | Status |
 |---|--------|---------|-----|---------|---------|--------|
-| 11 | `11_deploy_shared_ollama.sh` | Ollama | 10.0.5.100 | 11434 | ✅ SHARED | ✅ Ready |
-| 12 | `12_deploy_shared_qdrant.sh` | Qdrant | 10.0.5.101 | 6333, 6334 | ✅ SHARED | ✅ Ready |
-| 13 | `13_deploy_shared_postgres.sh` | PostgreSQL | 10.0.5.102 | 5432 | ✅ SHARED | ✅ Ready |
-| 14 | `14_deploy_shared_redis.sh` | Redis | 10.0.5.103 | 6379 | ✅ SHARED | ✅ Ready |
-| 16 | `16_deploy_shared_minio.sh` | MinIO | 10.0.5.104 | 9000, 9001 | ✅ SHARED | ✅ Ready |
-| 17 | `17_deploy_shared_searxng.sh` | SearXNG | 10.0.5.105 | 8080 | ✅ SHARED | ✅ Ready |
-| 18 | `18_deploy_shared_langfuse.sh` | Langfuse | 10.0.5.106 | 3002 | ✅ SHARED | ✅ Ready |
-| 19 | `19_deploy_shared_neo4j.sh` | Neo4j | 10.0.5.107 | 7474, 7687 | ✅ SHARED | ✅ Ready |
-| 23 | `23_deploy_shared_tika.sh` | Tika | 10.0.5.111 | 9998 | ✅ SHARED | ✅ Ready |
-| 24 | `24_deploy_shared_docling.sh` | Docling | 10.0.5.112 | 5001 | ✅ SHARED | ✅ Ready |
-| 25 | `25_deploy_shared_whisper.sh` | Whisper | 10.0.5.113 | 9000 | ✅ SHARED | ✅ Ready |
-| 26 | `26_deploy_shared_libretranslate.sh` | LibreTranslate | 10.0.5.114 | 5000 | ✅ SHARED | ✅ Ready |
-| 27 | `27_deploy_shared_mcpo.sh` | MCPO | 10.0.5.115 | 8765 | ✅ SHARED | ✅ Ready |
+| 11 | `11_deploy_shared_ollama.sh` | Ollama | 10.0.5.100 | 11434 | ✅ SHARED | ✅ DEPLOYED & VERIFIED |
+| 12 | `12_deploy_shared_qdrant.sh` | Qdrant | 10.0.5.101 | 6333, 6334 | ✅ SHARED | ✅ DEPLOYED & VERIFIED |
+| 13 | `13_deploy_shared_postgres.sh` | PostgreSQL | 10.0.5.102 | 5432 | ✅ SHARED | ✅ DEPLOYED & VERIFIED |
+| 14 | `14_deploy_shared_redis.sh` | Redis | 10.0.5.103 | 6379 | ✅ SHARED | ✅ DEPLOYED & VERIFIED |
+| 16 | `16_deploy_shared_minio.sh` | MinIO | 10.0.5.104 | 9000, 9001 | ✅ SHARED | ✅ DEPLOYED & VERIFIED |
+| 17 | `17_deploy_shared_searxng.sh` | SearXNG | 10.0.5.105 | 8080 | ✅ SHARED | ⚠️ CONTAINER EXISTS - NOT DEPLOYED |
+| 18 | `18_deploy_shared_langfuse.sh` | Langfuse | 10.0.5.106 | 3002 | ✅ SHARED | ⚠️ CONTAINER UNREACHABLE |
+| 19 | `19_deploy_shared_neo4j.sh` | Neo4j | 10.0.5.107 | 7474, 7687 | ✅ SHARED | ⚠️ CONTAINER EXISTS - NOT DEPLOYED |
+| 23 | `23_deploy_shared_tika.sh` | Tika | 10.0.5.111 | 9998 | ✅ SHARED | ❌ CONTAINER DOWN |
+| 24 | `24_deploy_shared_docling.sh` | Docling | 10.0.5.112 | 5001 | ✅ SHARED | 📦 CONTAINER READY - NEEDS DEPLOYMENT |
+| 25 | `25_deploy_shared_whisper.sh` | Whisper | 10.0.5.113 | 9000 | ✅ SHARED | 📦 CONTAINER READY - NEEDS DEPLOYMENT |
+| 26 | `26_deploy_shared_libretranslate.sh` | LibreTranslate | 10.0.5.114 | 5000 | ✅ SHARED | 📦 CONTAINER READY - NEEDS DEPLOYMENT |
+| 27 | `27_deploy_shared_mcpo.sh` | MCPO | 10.0.5.115 | 8765 | ✅ SHARED | 📦 CONTAINER READY - NEEDS DEPLOYMENT |
 
 **⚠️ DEPRECATED - OLD PER-USER SCRIPTS (DO NOT USE)**
 
@@ -85,13 +85,13 @@ These scripts deploy standalone services. Use script 52 instead for per-user dep
 
 | # | Script | Service | IP | Port(s) | Sharing | Status |
 |---|--------|---------|-----|---------|---------|--------|
-| 28 | `28_deploy_shared_gitea.sh` | Gitea | 10.0.5.120 | 3003, 2222 | ✅ SHARED | ✅ Ready |
-| 29 | `29_deploy_shared_monitoring.sh` | Prometheus/Grafana/Loki | 10.0.5.121-123 | 9090, 3004, 3100 | ✅ SHARED | ✅ Ready |
-| 30 | `30_deploy_shared_bookstack.sh` | BookStack | 10.0.5.124 | 3005 | ✅ SHARED | ✅ Ready |
-| 31 | `31_deploy_shared_metabase.sh` | Metabase | 10.0.5.125 | 3006 | ✅ SHARED | ✅ Ready |
-| 32 | `32_deploy_shared_playwright.sh` | Playwright | 10.0.5.126 | 3007 | ✅ SHARED | ✅ Ready |
-| 34 | `34_deploy_shared_portainer.sh` | Portainer | 10.0.5.128 | 9443, 9000 | ✅ SHARED | ✅ Ready |
-| 35 | `35_deploy_shared_formbricks.sh` | Formbricks | 10.0.5.129 | 3008 | ✅ SHARED | ✅ Ready |
+| 28 | `28_deploy_shared_gitea.sh` | Gitea | 10.0.5.120 | 3003, 2222 | ✅ SHARED | 📦 CONTAINER READY - NEEDS DEPLOYMENT |
+| 29 | `29_deploy_shared_monitoring.sh` | Prometheus/Grafana/Loki | 10.0.5.121-123 | 9090, 3004, 3100 | ✅ SHARED | ✅ DEPLOYED & VERIFIED |
+| 30 | `30_deploy_shared_bookstack.sh` | BookStack | 10.0.5.116 | 3005 | ✅ SHARED | 📦 CONTAINER READY - NEEDS DEPLOYMENT |
+| 31 | `31_deploy_shared_metabase.sh` | Metabase | 10.0.5.117 | 3006 | ✅ SHARED | 📦 CONTAINER READY - NEEDS DEPLOYMENT |
+| 32 | `32_deploy_shared_playwright.sh` | Playwright | 10.0.5.118 | 3007 | ✅ SHARED | 📦 CONTAINER READY - NEEDS DEPLOYMENT |
+| 34 | `34_deploy_shared_portainer.sh` | Portainer | 10.0.5.124 | 9443, 9000 | ✅ SHARED | 📦 CONTAINER READY - NEEDS DEPLOYMENT |
+| 35 | `35_deploy_shared_formbricks.sh` | Formbricks | 10.0.5.125 | 3008 | ✅ SHARED | 📦 CONTAINER READY - NEEDS DEPLOYMENT |
 
 **⚠️ DEPRECATED - OLD PER-USER SCRIPTS (DO NOT USE)**
 

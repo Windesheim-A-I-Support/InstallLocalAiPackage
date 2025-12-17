@@ -1,0 +1,42 @@
+IP,Name,CPU_Cores,RAM_MB,Disk_GB,Port,Domain,Status,Phase
+10.0.5.100,Ollama,8,16384,200,11434,ollama.valuechainhackers.xyz,✅ Deployed & Verified,Working
+10.0.5.101,Qdrant,4,8192,100,"6333, 6334",qdrant.valuechainhackers.xyz,✅ Deployed & Verified,Working
+10.0.5.102,PostgreSQL,4,8192,200,5432,postgres.valuechainhackers.xyz,✅ Deployed & Verified,Working
+10.0.5.103,Redis,2,4096,20,6379,redis.valuechainhackers.xyz,✅ Deployed & Verified,Working
+10.0.5.104,MinIO,2,4096,500,"9000, 9001",s3.valuechainhackers.xyz,✅ Deployed & Verified,Working
+10.0.5.105,SearXNG,2,2048,10,8080,searxng.valuechainhackers.xyz,❌ Container DOWN (has native script),Planning
+10.0.5.106,Langfuse,2,2048,10,3002,langfuse.valuechainhackers.xyz,✅ Native script ready - Container DOWN,Allocated
+10.0.5.107,Neo4j,4,4096,50,"7474, 7687",neo4j.valuechainhackers.xyz,✅ Native script ready - Container UP,Allocated
+10.0.5.108,Jupyter (PER-USER),2,2048,20,8888,N/A - Deploy in user containers,⚠️ Reserved for per-user deployment,Planning
+10.0.5.109,n8n (PER-USER),2,2048,10,5678,N/A - Deploy in user containers,✅ Native script ready (if shared deployment needed),Planning
+10.0.5.110,Flowise (PER-USER),2,3072,15,3001,N/A - Deploy in user containers,✅ Native script ready (if shared deployment needed),Planning
+10.0.5.111,Tika,2,2048,10,9998,tika.valuechainhackers.xyz,✅ Native script ready - Container DOWN,Allocated
+10.0.5.112,Docling,2,3072,15,5001,docling.valuechainhackers.xyz,✅ Native script ready - Container UP,Allocated
+10.0.5.113,Whisper,4,4096,20,9000,whisper.valuechainhackers.xyz,❌ Container DOWN - No native script yet,Planning
+10.0.5.114,LibreTranslate,2,2048,10,5000,translate.valuechainhackers.xyz,✅ Native script ready - Container UP,Allocated
+10.0.5.115,MCPO,1,1024,5,8765,mcpo.valuechainhackers.xyz,❌ Container DOWN - No native script yet,Planning
+10.0.5.116,BookStack,2,2048,20,3005,bookstack.valuechainhackers.xyz,✅ Native script ready - Container DOWN,Allocated
+10.0.5.117,Metabase,2,2048,10,3001,metabase.valuechainhackers.xyz,✅ Native script ready - Container DOWN,Allocated
+10.0.5.118,Playwright,2,2048,15,3007,playwright.valuechainhackers.xyz,❌ Container DOWN - No native script yet,Planning
+10.0.5.119,Code-Server (PER-USER),2,2048,20,8080,N/A - Deploy in user containers,⚠️ Reserved for per-user deployment,Planning
+10.0.5.120,Gitea,2,2048,50,"3000, 22",git.valuechainhackers.xyz,✅ Native script ready - Container DOWN,Allocated
+10.0.5.121,Prometheus,2,4096,50,9090,prometheus.valuechainhackers.xyz,✅ Deployed & Verified,Working
+10.0.5.122,Grafana,2,2048,10,3000,grafana.valuechainhackers.xyz,✅ Deployed & Verified,Working
+10.0.5.123,Loki,2,4096,50,3100,loki.valuechainhackers.xyz,✅ Deployed & Verified,Working
+10.0.5.124,Portainer,1,1024,5,"9443, 9000",portainer.valuechainhackers.xyz,❌ Container created but NOT STARTED in Proxmox,Planning
+10.0.5.125,Formbricks,1,1024,10,3008,formbricks.valuechainhackers.xyz,⚠️ Container UP but SSH not configured,Planning
+10.0.5.126,Mailserver,2,2048,20,"443, 25, 587, 993",mail.valuechainhackers.xyz,⚠️ Container UP but SSH not configured,Planning
+10.0.5.127,CRM,2,2048,20,3009,crm.valuechainhackers.xyz,📦 Not allocated,Planning
+10.0.5.128,Matrix,2,3072,20,"8008, 3010",matrix.valuechainhackers.xyz,📦 Not allocated,Planning
+10.0.5.129,Superset,4,4096,20,3011,superset.valuechainhackers.xyz,📦 Not allocated,Planning
+10.0.5.130,DuckDB,2,2048,30,8089,duckdb.valuechainhackers.xyz,📦 Not allocated,Planning
+10.0.5.131,RESERVED,-,-,-,-,Not allocated,Available for future service,Planning
+10.0.5.132,ComfyUI,4,8192,50,8188,comfyui.valuechainhackers.xyz,📦 Not allocated,Planning
+10.0.5.133,Automatic1111,4,8192,50,7860,sd.valuechainhackers.xyz,📦 Not allocated,Planning
+10.0.5.134,Faster Whisper,4,4096,20,9001,faster-whisper.valuechainhackers.xyz,❌ Container DOWN (has native script),Planning
+10.0.5.135,OpenedAI Speech,2,2048,10,8000,tts.valuechainhackers.xyz,📦 Not allocated,Planning
+10.0.5.136,ChainForge (PER-USER),2,2048,10,3010,N/A - Deploy in user containers,❌ Container created but NOT STARTED in Proxmox,Planning
+10.0.5.137,Big-AGI (PER-USER),2,2048,10,3011,N/A - Deploy in user containers,📦 Not allocated,Planning
+10.0.5.138,Kotaemon (PER-USER),2,3072,15,3012,N/A - Deploy in user containers,📦 Not allocated,Planning
+10.0.5.139,LobeChat,2,2048,10,3013,lobechat.valuechainhackers.xyz,📦 Not allocated,Planning
+10.0.5.146,Authentik,2,2048,10,"9000, 9443",auth.valuechainhackers.xyz,📦 Not allocated,Planning

@@ -316,6 +316,102 @@ Services (10.0.5.0/24) ← Private network
 
 ---
 
+### Shared Services Container Requirements
+
+**Container specifications for ALL shared services (10.0.5.100-199):**
+
+#### Core Infrastructure (100-105) - ✅ DEPLOYED
+
+| IP | CTID | Service | CPU | RAM | Disk | Notes |
+|----|------|---------|-----|-----|------|-------|
+| 10.0.5.100 | 100 | Ollama | 8 cores | 16GB | 200GB | GPU passthrough recommended |
+| 10.0.5.101 | 101 | Qdrant | 4 cores | 8GB | 100GB | Vector storage |
+| 10.0.5.102 | 102 | PostgreSQL | 4 cores | 8GB | 200GB | All app databases |
+| 10.0.5.103 | 103 | Redis | 2 cores | 4GB | 20GB | Cache + sessions |
+| 10.0.5.104 | 104 | MinIO | 2 cores | 4GB | 500GB | Object storage |
+| 10.0.5.105 | 105 | SearXNG | 2 cores | 2GB | 10GB | Meta-search |
+
+#### Observability & Monitoring (106-107, 121-123) - ✅ DEPLOYED
+
+| IP | CTID | Service | CPU | RAM | Disk | Notes |
+|----|------|---------|-----|-----|------|-------|
+| 10.0.5.106 | 106 | Langfuse | 2 cores | 2GB | 10GB | LLM observability |
+| 10.0.5.107 | 107 | Neo4j | 4 cores | 4GB | 50GB | Graph database |
+| 10.0.5.121 | 121 | Prometheus | 2 cores | 4GB | 50GB | Metrics collection |
+| 10.0.5.122 | 122 | Grafana | 2 cores | 2GB | 10GB | Dashboards |
+| 10.0.5.123 | 123 | Loki | 2 cores | 4GB | 50GB | Log aggregation |
+
+#### AI/ML Services (108-115) - NEEDED
+
+| IP | CTID | Service | CPU | RAM | Disk | Notes |
+|----|------|---------|-----|-----|------|-------|
+| 10.0.5.108 | 108 | Jupyter | 2 cores | 2GB | 20GB | ⚠️ PER-USER: Deploy in user containers (single-user by default) |
+| 10.0.5.109 | 109 | n8n | 2 cores | 2GB | 10GB | ⚠️ PER-USER: Free version = 1 user only |
+| 10.0.5.110 | 110 | Flowise | 2 cores | 3GB | 15GB | ⚠️ PER-TEAM: Limited multi-user support |
+| 10.0.5.111 | 111 | Tika | 2 cores | 2GB | 10GB | ✅ SHARED: Stateless document parsing |
+| 10.0.5.112 | 112 | Docling | 2 cores | 3GB | 15GB | ✅ SHARED: Advanced document parsing |
+| 10.0.5.113 | 113 | Whisper | 4 cores | 4GB | 20GB | ✅ SHARED: Stateless STT (GPU optional) |
+| 10.0.5.114 | 114 | LibreTranslate | 2 cores | 2GB | 10GB | ✅ SHARED: Translation API |
+| 10.0.5.115 | 115 | MCPO | 1 core | 1GB | 5GB | ✅ SHARED: MCP to OpenAPI proxy |
+
+#### Enterprise Tools (116-120) - NEEDED
+
+| IP | CTID | Service | CPU | RAM | Disk | Notes |
+|----|------|---------|-----|-----|------|-------|
+| 10.0.5.116 | 116 | BookStack | 2 cores | 2GB | 20GB | ✅ SHARED: Multi-user documentation |
+| 10.0.5.117 | 117 | Metabase | 2 cores | 2GB | 10GB | ✅ SHARED: Multi-user BI |
+| 10.0.5.118 | 118 | Playwright | 2 cores | 2GB | 15GB | ✅ SHARED: Stateless browser automation |
+| 10.0.5.119 | 119 | Code-Server | 2 cores | 2GB | 20GB | ⚠️ PER-USER: Single workspace per instance |
+| 10.0.5.120 | 120 | Gitea | 2 cores | 2GB | 50GB | ✅ SHARED: Multi-user Git server |
+
+#### Optional Services (124-139) - DEPLOY AS NEEDED
+
+| IP | CTID | Service | CPU | RAM | Disk | Notes |
+|----|------|---------|-----|-----|------|-------|
+| 10.0.5.124 | 124 | Portainer | 1 core | 1GB | 5GB | ✅ SHARED: Multi-user Docker management |
+| 10.0.5.125 | 125 | Formbricks | 1 core | 1GB | 10GB | ✅ SHARED: Multi-user form builder |
+| 10.0.5.126 | 126 | Mailserver | 2 cores | 2GB | 20GB | ✅ SHARED: Multi-domain mail server |
+| 10.0.5.127 | 127 | CRM | 2 cores | 2GB | 20GB | ✅ SHARED: Multi-user CRM |
+| 10.0.5.128 | 128 | Matrix | 2 cores | 3GB | 20GB | ✅ SHARED: Multi-user chat server |
+| 10.0.5.129 | 129 | Superset | 4 cores | 4GB | 20GB | ✅ SHARED: Multi-user data viz |
+| 10.0.5.130 | 130 | DuckDB | 2 cores | 2GB | 30GB | ✅ SHARED: API-based OLAP database |
+| 10.0.5.131 | 131 | RESERVED | - | - | - | Available for future service |
+| 10.0.5.132 | 132 | ComfyUI | 4 cores | 8GB | 50GB | ✅ SHARED: Multi-user via API (GPU REQUIRED) |
+| 10.0.5.133 | 133 | Automatic1111 | 4 cores | 8GB | 50GB | ✅ SHARED: Multi-user via API (GPU REQUIRED) |
+| 10.0.5.134 | 134 | Faster Whisper | 4 cores | 4GB | 20GB | ✅ SHARED: Stateless STT (GPU optional) |
+| 10.0.5.135 | 135 | OpenedAI Speech | 2 cores | 2GB | 10GB | ✅ SHARED: Stateless TTS |
+| 10.0.5.136 | 136 | ChainForge | 2 cores | 2GB | 10GB | ⚠️ PER-USER: Desktop app, local storage |
+| 10.0.5.137 | 137 | Big-AGI | 2 cores | 2GB | 10GB | ⚠️ PER-USER: Browser localStorage |
+| 10.0.5.138 | 138 | Kotaemon | 2 cores | 3GB | 15GB | ⚠️ PER-USER: Per-instance document uploads |
+| 10.0.5.139 | 139 | LobeChat | 2 cores | 2GB | 10GB | ✅ SHARED: Multi-user AI chat interface |
+
+**Summary Totals:**
+
+| Category | Containers | Total CPU | Total RAM | Total Disk |
+|----------|-----------|-----------|-----------|------------|
+| **Core (100-105)** | 6 | 22 cores | 42GB | 1030GB |
+| **Monitoring (106-107, 121-123)** | 5 | 12 cores | 16GB | 170GB |
+| **AI/ML (108-115)** | 8 | 18 cores | 20GB | 105GB |
+| **Enterprise (116-120)** | 5 | 10 cores | 10GB | 115GB |
+| **Optional (124-139)** | 16 | 44 cores | 59GB | 405GB |
+| **TOTAL SHARED SERVICES** | **40** | **106 cores** | **147GB** | **1825GB** |
+
+**Deployment Priority:**
+1. **Phase 1** - Core (100-105) - ✅ DONE
+2. **Phase 2** - Monitoring (106-107, 121-123) - ✅ DONE
+3. **Phase 3** - AI/ML (108-115) - RECOMMENDED NEXT
+4. **Phase 4** - Enterprise (116-120) - DEPLOY AS NEEDED
+5. **Phase 5** - Optional (124-139) - DEPLOY AS NEEDED
+
+**Important Notes:**
+- ❌ **NO DOCKER** on ANY shared service containers (100-199)
+- ✅ All services deployed NATIVELY with systemd + apt packages
+- Services marked with PostgreSQL dependency need access to 10.0.5.102
+- GPU-required services (132-133) will not function without GPU passthrough
+- GPU-optional services (100, 113, 134) work better with GPU but can run on CPU
+
+---
+
 ### Phase 3: First User Container (1 container)
 
 **Deploy ONE user container to test:**

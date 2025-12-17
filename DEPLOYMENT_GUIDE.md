@@ -1,5 +1,101 @@
 # Complete Deployment Guide - Local AI Stack on Debian 12
 
+## 🎯 Deployment Phase Definitions
+
+**CRITICAL:** All shared service deployments (containers 100-199) MUST follow this phase progression. Track status in [SHARED_SERVICES_STATUS.csv](SHARED_SERVICES_STATUS.csv).
+
+### Phase 1: Planning
+**Status:** Service identified and planned, container not yet created
+- Service requirements documented in [ARCHITECTURE.md](ARCHITECTURE.md)
+- IP address allocated
+- Resource requirements defined (CPU, RAM, Disk)
+- Domain name assigned
+
+### Phase 2: Allocated
+**Status:** Container created and reachable
+- LXC container created in Proxmox with assigned IP
+- Container responds to ping
+- SSH access confirmed
+- System dependencies installed (script 01)
+- **NO SERVICE DEPLOYED YET**
+
+### Phase 3: Installing
+**Status:** Service deployment in progress
+- Running deployment script (e.g., `11_deploy_shared_ollama.sh`)
+- Service being installed via systemd + apt (NO DOCKER on shared services 100-199)
+- Configuration files being created
+
+### Phase 4: Testing
+**Status:** Service installed, running verification tests
+- **Service Status:** `systemctl status <service>` shows active (running)
+- **Port Test:** Service responds on configured port
+- **API Test:** Service API returns expected responses
+- **Traefik Config:** Dynamic config file created in `/opt/traefik-stack/dynamic/205{IP}.yml`
+- **Domain Test:** Service accessible via `https://<service>.valuechainhackers.xyz`
+- **NOT YET DOCUMENTED OR MONITORED**
+
+### Phase 5: Working ✅
+**Status:** Service fully deployed, verified, documented, and monitored
+
+**REQUIREMENTS FOR "Working" STATUS:**
+
+1. **Service Running & Accessible:**
+   - Service active: `systemctl status <service>` = active (running)
+   - Port responding: `curl http://10.0.5.{IP}:{PORT}` returns data
+   - Domain accessible: `curl https://{service}.valuechainhackers.xyz` = HTTP 200
+
+2. **Credentials Documented:**
+   - ALL passwords/keys added to [CREDENTIALS.md](CREDENTIALS.md)
+   - Password files backed up (e.g., `/root/.redis_password`)
+   - Connection strings documented with examples
+
+3. **Traefik Routing Configured:**
+   - Dynamic config exists: `/opt/traefik-stack/dynamic/205{IP}.yml`
+   - Routes to correct backend IP and port
+   - SSL/TLS configured with Let's Encrypt
+   - Domain resolves and returns HTTP 200
+
+4. **Tests Completed Successfully:**
+   - Service-specific health checks pass
+   - API endpoints return expected data
+   - Database connections work (if applicable)
+   - All test results documented
+
+5. **Monitoring Configured (if applicable):**
+   - Service added to Prometheus targets (if it exposes metrics)
+   - Grafana dashboard configured (if applicable)
+   - Logs flowing to Loki (if applicable)
+
+6. **Status Updated:**
+   - [SHARED_SERVICES_STATUS.csv](SHARED_SERVICES_STATUS.csv) updated to "Working"
+   - [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) marked as "✅ DEPLOYED & VERIFIED"
+   - [CREDENTIALS.md](CREDENTIALS.md) contains all access information
+
+**NEVER mark a service as "Working" unless ALL 6 requirements are met!**
+
+---
+
+## ⚠️ CRITICAL DEPLOYMENT RULES
+
+### NO DOCKER for Shared Services (100-199)
+- ❌ **NEVER** use Docker for containers 10.0.5.100-199
+- ✅ **ONLY** native deployment (systemd + apt packages)
+- ✅ Docker **ONLY** allowed on user containers (200-249)
+
+### Per-User vs Shared Services
+Refer to [SHARED_SERVICES_LIMITATIONS.md](SHARED_SERVICES_LIMITATIONS.md) for which services can be shared:
+- **✅ SHARED** - Deploy once, all users connect (e.g., Ollama, PostgreSQL, Redis)
+- **⚠️ PER-USER** - Deploy in user containers only (e.g., Open WebUI, n8n, Jupyter)
+
+### Deployment Process
+1. Check [SHARED_SERVICES_STATUS.csv](SHARED_SERVICES_STATUS.csv) for current phase
+2. Follow phase progression: Planning → Allocated → Installing → Testing → Working
+3. Update CSV after each phase transition
+4. Document credentials immediately after installation
+5. Test thoroughly before marking as Working
+
+---
+
 ## 📋 Overview
 
 This guide will take you from a **completely blank Debian 12 LXC container** to a fully functional AI stack with:
