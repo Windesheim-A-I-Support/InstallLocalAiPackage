@@ -16,6 +16,7 @@ set -e
 # ==============================================================================
 
 USER_IP="${1:-10.0.5.200}"
+OLLAMA_URL="${2:-http://10.0.5.100:11434}"
 STACK_DIR="/opt/simple-openwebui"
 
 # Check if running as root
@@ -32,7 +33,7 @@ echo "This deploys:"
 echo "  • Open WebUI (chat interface)"
 echo "  • Open WebUI Pipelines (plugins)"
 echo ""
-echo "Using SHARED Ollama at: http://10.0.5.100:11434"
+echo "Using SHARED Ollama at: ${OLLAMA_URL}"
 echo "Storage: Built-in SQLite (simple, no external DB needed)"
 echo ""
 echo "Access at: http://${USER_IP}:3000"
@@ -41,9 +42,56 @@ read -p "Press ENTER to continue or Ctrl+C to cancel..."
 echo ""
 
 # ==============================================================================
+# STEP 0: CHECK DOCKER INSTALLATION
+# ==============================================================================
+echo "--> [0/4] Checking Docker installation..."
+
+if ! command -v docker &> /dev/null; then
+    echo "⚠️  Docker not found. Installing Docker..."
+
+    # Update package index
+    apt-get update
+
+    # Install prerequisites
+    apt-get install -y ca-certificates curl gnupg lsb-release
+
+    # Add Docker's official GPG key
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    chmod a+r /etc/apt/keyrings/docker.gpg
+
+    # Set up the repository
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    # Install Docker Engine
+    apt-get update
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+    # Start and enable Docker
+    systemctl start docker
+    systemctl enable docker
+
+    echo "✅ Docker installed successfully"
+else
+    echo "✅ Docker already installed"
+fi
+
+# Verify docker compose is available
+if ! docker compose version &> /dev/null; then
+    echo "❌ Error: docker compose plugin not available"
+    echo "Please install docker-compose-plugin manually"
+    exit 1
+fi
+
+echo "✅ Docker prerequisites satisfied"
+
+# ==============================================================================
 # STEP 1: CREATE DIRECTORY STRUCTURE
 # ==============================================================================
-echo "--> [1/3] Creating directory structure..."
+echo "--> [1/4] Creating directory structure..."
 mkdir -p "$STACK_DIR"
 cd "$STACK_DIR"
 
@@ -55,9 +103,9 @@ echo "✅ Directory structure created"
 # ==============================================================================
 # STEP 2: CREATE DOCKER COMPOSE FILE
 # ==============================================================================
-echo "--> [2/3] Creating docker-compose.yml..."
+echo "--> [2/4] Creating docker-compose.yml..."
 
-cat > docker-compose.yml <<'EOF'
+cat > docker-compose.yml <<EOF
 version: '3.8'
 
 services:
@@ -73,11 +121,17 @@ services:
     environment:
       PIPELINES_DIR: /app/pipelines
       # Connect to shared Ollama
-      OLLAMA_BASE_URL: http://10.0.5.100:11434
+      OLLAMA_BASE_URL: ${OLLAMA_URL}
     volumes:
       - ./pipelines/data:/app/pipelines
     networks:
       - webui-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9099/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # ====================
   # OPEN WEBUI
@@ -90,7 +144,8 @@ services:
       - "3000:8080"
     environment:
       # Connect to shared Ollama
-      OLLAMA_BASE_URL: http://10.0.5.100:11434
+      OLLAMA_BASE_URL: ${OLLAMA_URL}
+      USE_OLLAMA_DOCKER: "false"
 
       # Use built-in SQLite database
       DATABASE_URL: sqlite:///app/backend/data/webui.db
@@ -117,7 +172,14 @@ services:
     networks:
       - webui-network
     depends_on:
-      - pipelines
+      pipelines:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 networks:
   webui-network:
@@ -127,15 +189,38 @@ EOF
 echo "✅ docker-compose.yml created"
 
 # ==============================================================================
-# STEP 3: DEPLOY STACK
+# STEP 3: STOP EXISTING CONTAINERS (if any)
 # ==============================================================================
-echo "--> [3/3] Deploying Open WebUI..."
+echo "--> [3/4] Stopping existing containers (if any)..."
+docker compose down 2>/dev/null || true
+echo "✅ Cleanup complete"
+
+# ==============================================================================
+# STEP 4: DEPLOY STACK
+# ==============================================================================
+echo "--> [4/4] Deploying Open WebUI..."
 echo ""
 echo "⚠️  This will pull Docker images (~500MB)"
 echo ""
 
 # Deploy the stack
+docker compose pull
 docker compose up -d
+
+# Wait for services to be healthy
+echo ""
+echo "Waiting for services to become healthy..."
+sleep 10
+
+# Check container status
+PIPELINES_STATUS=$(docker inspect -f '{{.State.Health.Status}}' simple-pipelines 2>/dev/null || echo "unknown")
+WEBUI_STATUS=$(docker inspect -f '{{.State.Health.Status}}' simple-open-webui 2>/dev/null || echo "unknown")
+
+echo ""
+echo "Container Health Status:"
+echo "  • Pipelines: $PIPELINES_STATUS"
+echo "  • Open WebUI: $WEBUI_STATUS"
+echo ""
 
 echo ""
 echo "========================================================="
@@ -148,7 +233,7 @@ echo "Access your services at:"
 echo "  • Open WebUI:      http://${USER_IP}:3000"
 echo "  • Pipelines:       http://${USER_IP}:9099"
 echo ""
-echo "Using shared Ollama: http://10.0.5.100:11434"
+echo "Using shared Ollama: ${OLLAMA_URL}"
 echo ""
 echo "Next Steps:"
 echo "  1. Open http://${USER_IP}:3000 in your browser"
@@ -157,15 +242,21 @@ echo "  3. Start chatting with Ollama models!"
 echo ""
 echo "To check status:"
 echo "  docker ps"
-echo ""
-echo "To view logs:"
 echo "  docker logs simple-open-webui -f"
+echo "  docker logs simple-pipelines -f"
+echo ""
+echo "To check health:"
+echo "  curl http://${USER_IP}:3000/health"
+echo "  curl http://${USER_IP}:9099/health"
 echo ""
 echo "To upgrade to full stack with PostgreSQL, Redis, etc:"
 echo "  bash 08b_upgrade_to_full_stack.sh"
 echo ""
 echo "To stop:"
 echo "  cd $STACK_DIR && docker compose down"
+echo ""
+echo "To restart:"
+echo "  cd $STACK_DIR && docker compose restart"
 echo ""
 echo "Stack location: $STACK_DIR"
 echo "========================================================="
