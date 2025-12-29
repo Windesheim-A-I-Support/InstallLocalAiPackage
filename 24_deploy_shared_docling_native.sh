@@ -57,12 +57,12 @@ cd /opt/docling
 
 # Create virtual environment
 echo "Creating Python virtual environment..."
-sudo -u docling python3 -m venv /opt/docling/venv
+su -s /bin/bash -c "python3 -m venv /opt/docling/venv" docling
 
 # Install docling
 echo "Installing Docling (this may take several minutes)..."
-sudo -u docling /opt/docling/venv/bin/pip install --upgrade pip
-sudo -u docling /opt/docling/venv/bin/pip install docling fastapi uvicorn python-multipart
+su -s /bin/bash -c "/opt/docling/venv/bin/pip install --upgrade pip" docling
+su -s /bin/bash -c "/opt/docling/venv/bin/pip install docling fastapi uvicorn python-multipart" docling
 
 # Create simple API server
 echo "Creating Docling API server..."

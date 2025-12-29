@@ -49,13 +49,14 @@ echo "Installing Node.js 20.x..."
 apt-get update
 apt-get install -y ca-certificates curl gnupg
 mkdir -p /etc/apt/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+rm -f /etc/apt/keyrings/nodesource.gpg
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --batch --dearmor -o /etc/apt/keyrings/nodesource.gpg
 
 NODE_MAJOR=20
 echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
 
 apt-get update
-apt-get install -y nodejs postgresql-client
+apt-get install -y nodejs postgresql-client build-essential python3
 
 # Create n8n user
 if ! id n8n &>/dev/null; then
@@ -72,37 +73,37 @@ CREATE DATABASE n8n OWNER n8n;
 \q
 EOF
 
-# Install n8n globally
+# Install n8n globally (must be root for global install)
 echo "Installing n8n..."
-sudo -u n8n npm install -g n8n
+npm install -g n8n
 
 # Generate encryption key
 ENCRYPTION_KEY=$(openssl rand -hex 32)
 
-# Create environment file
+# Create environment file (systemd EnvironmentFile format - no 'export')
 mkdir -p /opt/n8n/.n8n
 cat > /opt/n8n/.n8n/config << EOF
-export N8N_HOST=0.0.0.0
-export N8N_PORT=5678
-export N8N_PROTOCOL=http
-export WEBHOOK_URL=http://$(hostname -I | awk '{print $1}'):5678/
-export N8N_ENCRYPTION_KEY=${ENCRYPTION_KEY}
+N8N_HOST=0.0.0.0
+N8N_PORT=5678
+N8N_PROTOCOL=http
+WEBHOOK_URL=http://$(hostname -I | awk '{print $1}'):5678/
+N8N_ENCRYPTION_KEY=${ENCRYPTION_KEY}
 
 # Database
-export DB_TYPE=postgresdb
-export DB_POSTGRESDB_HOST=${POSTGRES_HOST}
-export DB_POSTGRESDB_PORT=5432
-export DB_POSTGRESDB_DATABASE=n8n
-export DB_POSTGRESDB_USER=n8n
-export DB_POSTGRESDB_PASSWORD=${N8N_DB_PASS}
+DB_TYPE=postgresdb
+DB_POSTGRESDB_HOST=${POSTGRES_HOST}
+DB_POSTGRESDB_PORT=5432
+DB_POSTGRESDB_DATABASE=n8n
+DB_POSTGRESDB_USER=n8n
+DB_POSTGRESDB_PASSWORD=${N8N_DB_PASS}
 
 # Execution
-export EXECUTIONS_DATA_SAVE_ON_ERROR=all
-export EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
-export EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS=true
+EXECUTIONS_DATA_SAVE_ON_ERROR=all
+EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
+EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS=true
 
 # User management
-export N8N_USER_MANAGEMENT_DISABLED=false
+N8N_USER_MANAGEMENT_DISABLED=false
 EOF
 
 chown -R n8n:n8n /opt/n8n

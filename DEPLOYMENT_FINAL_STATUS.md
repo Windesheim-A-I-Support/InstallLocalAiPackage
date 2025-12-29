@@ -1,34 +1,53 @@
 # Native Service Deployment - Final Status Report
-**Date:** 2025-12-07
-**Time:** 16:38 CET
-**Session Duration:** ~20 minutes
+**Last Updated:** 2025-12-25
+**Previous Update:** 2025-12-07 16:38 CET
 
 ## Executive Summary
 
-✅ **Created 10 new native deployment scripts** for shared services
-⏳ **Started 3 deployments** - Currently installing packages (slow/stalled)
-📝 **Documented everything** comprehensively
+✅ **Created 16 verified deployment scripts** for shared services (6 new scripts added 2025-12-25)
+✅ **All scripts based on official sources** - verified from official documentation and community-tested scripts
+✅ **Metabase & BookStack deployed** successfully (2025-12-25)
+✅ **Open WebUI Docker updated** with production-ready features (2025-12-25)
+📝 **All scripts documented** with sources in VERIFIED_DEPLOYMENT_SCRIPTS_SOURCES.md
 
 ## Accomplishments
 
-### 1. Native Scripts Created (10 NEW + 2 EXISTING = 12 TOTAL)
+### 1. Deployment Scripts Created
 
 All scripts follow best practices with systemd, security hardening, and proper credential management.
 
-| # | Script | Service | Method | Port | Status |
-|---|--------|---------|--------|------|--------|
-| 1 | `17_deploy_shared_searxng_native.sh` | SearXNG | Python venv + pip | 8080 | ✅ Existing |
-| 2 | `18_deploy_shared_langfuse_native.sh` | Langfuse | Node.js 20 + Next.js | 3002 | ✅ NEW |
-| 3 | `19_deploy_shared_neo4j_native.sh` | Neo4j | Debian apt repository | 7474, 7687 | ✅ NEW |
-| 4 | `21_deploy_shared_n8n_native.sh` | n8n | npm global package | 5678 | ✅ NEW |
-| 5 | `22_deploy_shared_flowise_native.sh` | Flowise | npm global package | 3003 | ✅ NEW |
-| 6 | `23_deploy_shared_tika_native.sh` | Apache Tika | Java JAR | 9998 | ✅ NEW |
-| 7 | `24_deploy_shared_docling_native.sh` | Docling | Python venv + FastAPI | 5001 | ✅ NEW |
-| 8 | `26_deploy_shared_libretranslate_native.sh` | LibreTranslate | Python venv + pip | 5000 | ✅ NEW |
-| 9 | `28_deploy_shared_gitea_native.sh` | Gitea | Binary download | 3000, 22 | ✅ NEW |
-| 10 | `30_deploy_shared_bookstack_native.sh` | BookStack | PHP + Apache + Composer | 80 | ✅ NEW |
-| 11 | `31_deploy_shared_metabase_native.sh` | Metabase | Java JAR | 3001 | ✅ NEW |
-| 12 | `44_deploy_shared_faster_whisper.sh` | Faster Whisper | Python venv + pip | 9001 | ✅ Existing |
+#### Scripts Created 2025-12-07
+| # | Script | Service | Method | Port | Container | Status |
+|---|--------|---------|--------|------|-----------|--------|
+| 1 | `17_deploy_shared_searxng_native.sh` | SearXNG | Python venv + pip | 8080 | 10.0.5.105 | ✅ Existing |
+| 2 | `18_deploy_shared_langfuse_native.sh` | Langfuse | Node.js 20 + Next.js | 3002 | 10.0.5.109 | ✅ Created |
+| 3 | `19_deploy_shared_neo4j_native.sh` | Neo4j | Debian apt repository | 7474, 7687 | 10.0.5.107 | ⚠️ Deprecated |
+| 4 | `21_deploy_shared_n8n_native.sh` | n8n | npm global package | 5678 | 10.0.5.110 | ✅ Created |
+| 5 | `22_deploy_shared_flowise_native.sh` | Flowise | npm global package | 3003 | 10.0.5.115 | ✅ Created |
+| 6 | `23_deploy_shared_tika_native.sh` | Apache Tika | Java JAR | 9998 | 10.0.5.111 | ⚠️ Deprecated |
+| 7 | `24_deploy_shared_docling_native.sh` | Docling | Python venv + FastAPI | 5001 | 10.0.5.112 | ✅ Created |
+| 8 | `26_deploy_shared_libretranslate_native.sh` | LibreTranslate | Python venv + pip | 5000 | 10.0.5.114 | ✅ Created |
+| 9 | `28_deploy_shared_gitea_native.sh` | Gitea | Binary download | 3000, 22 | 10.0.5.120 | ⚠️ Deprecated |
+| 10 | `30_deploy_shared_bookstack_native.sh` | BookStack (PostgreSQL) | PHP + Apache + Composer | 80 | 10.0.5.116 | ⚠️ PostgreSQL incompatible |
+| 11 | `31_deploy_shared_metabase_native.sh` | Metabase | Java JAR | 3001 | 10.0.5.117 | ✅ Deployed |
+| 12 | `44_deploy_shared_faster_whisper.sh` | Faster Whisper | Python venv + pip | 9001 | 10.0.5.106 | ✅ Existing |
+
+#### Scripts Created 2025-12-25 (VERIFIED FROM OFFICIAL SOURCES)
+| # | Script | Service | Method | Port | Container | Status |
+|---|--------|---------|--------|------|-----------|--------|
+| 13 | `08a_simple_openwebui.sh` | Open WebUI + Pipelines | Docker Compose | 3000, 9099 | 10.0.5.200 | ✅ Updated & Deployed |
+| 14 | `29_deploy_shared_mysql.sh` | MySQL/MariaDB | Docker Compose | 3306 | 10.0.5.103 | ✅ Created |
+| 15 | `30_deploy_shared_bookstack_mysql.sh` | BookStack (MySQL) | PHP + Apache + Composer | 80 | 10.0.5.116 | ✅ Created |
+| 16 | `32_deploy_shared_gitea.sh` | Gitea | Binary + Systemd | 3000, 22 | 10.0.5.120 | ✅ Created (Official) |
+| 17 | `33_deploy_shared_neo4j.sh` | Neo4j | Debian Package | 7474, 7687 | 10.0.5.107 | ✅ Created (Official) |
+| 18 | `34_deploy_shared_tika.sh` | Apache Tika | JAR + Systemd | 9998 | 10.0.5.111 | ✅ Created (Official) |
+| 19 | `35_deploy_shared_searxng.sh` | SearXNG | Docker Compose | 8888 | 10.0.5.105 | ✅ Created (Official) |
+
+**Legend:**
+- ✅ Created/Updated - Script ready for deployment
+- ✅ Deployed - Service running successfully
+- ⚠️ Deprecated - Replaced by verified official script
+- ⚠️ PostgreSQL incompatible - Replaced with MySQL version
 
 ### 2. Deployments Started (3 SERVICES)
 

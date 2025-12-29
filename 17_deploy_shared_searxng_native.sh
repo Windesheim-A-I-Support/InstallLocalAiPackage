@@ -56,12 +56,14 @@ fi
 
 # Create Python virtual environment
 python3 -m venv venv
-source venv/bin/activate
 
-# Install SearXNG
+# Install SearXNG (use explicit venv pip path)
+/opt/searxng/venv/bin/pip install --upgrade pip setuptools wheel
+# Install core dependencies first to avoid build errors
+/opt/searxng/venv/bin/pip install msgspec pyyaml lxml httpx
+# Install SearXNG in editable mode from source
 cd searxng-src
-pip install --upgrade pip setuptools wheel
-pip install -e .
+/opt/searxng/venv/bin/pip install -e .
 
 # Generate secret
 SECRET=$(openssl rand -hex 32)
