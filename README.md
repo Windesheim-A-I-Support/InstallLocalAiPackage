@@ -12,18 +12,16 @@
 ```
 InstallLocalAiPackage/
 ├── README.md                    # This file
-├── scripts/                     # All deployment scripts (90+ scripts)
-│   ├── XX_deploy_shared_*.sh   # Service deployment scripts
-│   ├── XX_configure_*.sh       # Configuration scripts
-│   └── monitoring_*.sh         # Health check scripts
-├── docs/                        # Documentation (14 files)
-│   ├── CONTAINER_INVENTORY.md  # ⭐ Complete container listing
-│   ├── CURRENT_STATUS.md       # ⭐ Quick status table
-│   ├── TASKS_REMAINING.md      # ⭐ To-do list
-│   ├── WORKING_SERVICES_CREDENTIALS.md  # ⭐ Login credentials
-│   └── ...                     # Reference docs
-├── logs/                        # Health check & monitoring logs
-└── archive/                     # Old configs & historical files
+├── scripts/                     # 91 deployment scripts
+│   ├── XX_deploy_shared_*.sh   # Service deployments
+│   ├── XX_configure_*.sh       # Configurations
+│   └── monitoring_*.sh         # Health checks
+├── docs/                        # 3 files only!
+│   ├── STATUS.md               # ⭐ Status, inventory, tasks
+│   ├── CREDENTIALS.md          # ⭐ Login credentials
+│   └── REFERENCE.md            # ⭐ Architecture & deployment guide
+├── logs/                        # Health check logs
+└── archive/                     # Old configs
 ```
 
 ---
@@ -32,9 +30,9 @@ InstallLocalAiPackage/
 
 ### View Status
 ```bash
-cat docs/CURRENT_STATUS.md              # Quick overview
-cat docs/CONTAINER_INVENTORY.md         # Full details
-cat docs/WORKING_SERVICES_CREDENTIALS.md  # Login info
+cat docs/STATUS.md          # Everything: status, inventory, tasks
+cat docs/CREDENTIALS.md     # Login credentials
+cat docs/REFERENCE.md       # Architecture & deployment guide
 ```
 
 ### Deploy a Service
@@ -54,7 +52,7 @@ for ip in 100 101 104 105 107 109 112 113 114 116 117 118 121 122 123; do
   timeout 2 curl -s http://10.0.5.$ip 2>&1 | head -1
 done
 
-# Check specific service logs
+# Check specific service
 ssh root@10.0.5.XXX "journalctl -u <service> -f"
 ```
 
@@ -95,33 +93,7 @@ ssh root@10.0.5.XXX "journalctl -u <service> -f"
 | Grafana | 10.0.5.122 | 3000 |
 | Loki | 10.0.5.123 | 3100 |
 
-**Full inventory:** See [docs/CONTAINER_INVENTORY.md](docs/CONTAINER_INVENTORY.md)
-
----
-
-## 📋 Available Deployment Scripts
-
-### Ready to Deploy (Existing Containers)
-```bash
-scripts/38_deploy_shared_jupyter_native.sh    # JupyterLab → 124
-scripts/34_deploy_shared_tika.sh              # Tika → 111
-scripts/32_deploy_shared_gitea.sh             # Gitea → 120
-```
-
-### New Services (Need New Containers)
-```bash
-scripts/40_deploy_shared_elasticsearch_native.sh   # Elasticsearch → 127
-scripts/39_deploy_shared_litellm_native.sh         # LiteLLM → 128
-scripts/41_deploy_shared_unstructured_native.sh    # Unstructured → 129
-scripts/43_deploy_shared_superset_native.sh        # Superset → 130
-scripts/42_deploy_shared_haystack_native.sh        # Haystack → 131
-scripts/44_deploy_shared_langgraph_native.sh       # LangGraph → 132
-scripts/45_deploy_shared_graphrag_native.sh        # GraphRAG → 133
-scripts/46_deploy_shared_plaso_native.sh           # Plaso → 135
-scripts/47_deploy_shared_volatility3_native.sh     # Volatility3 → 138
-```
-
-**Full script list:** See [docs/NATIVE_SCRIPTS_SUMMARY.md](docs/NATIVE_SCRIPTS_SUMMARY.md)
+**Full inventory:** See [docs/STATUS.md](docs/STATUS.md)
 
 ---
 
@@ -133,31 +105,27 @@ scripts/47_deploy_shared_volatility3_native.sh     # Volatility3 → 138
 4. **Health checks required** - All deployments must verify
 5. **Traefik routing** - All external access through reverse proxy
 
-**Details:** See [docs/ARCHITECTURE_RULES.md](docs/ARCHITECTURE_RULES.md)
+**Details:** See [docs/REFERENCE.md](docs/REFERENCE.md)
 
 ---
 
-## 📖 Documentation
+## 📖 Documentation (3 Files Only!)
 
 | File | Purpose |
 |---|---|
-| [DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md) | Navigation guide |
-| [CONTAINER_INVENTORY.md](docs/CONTAINER_INVENTORY.md) | Complete container listing |
-| [CURRENT_STATUS.md](docs/CURRENT_STATUS.md) | Service status table |
-| [TASKS_REMAINING.md](docs/TASKS_REMAINING.md) | To-do list |
-| [WORKING_SERVICES_CREDENTIALS.md](docs/WORKING_SERVICES_CREDENTIALS.md) | Login credentials |
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture |
-| [HEALTH_CHECK_GUIDE.md](docs/HEALTH_CHECK_GUIDE.md) | How to verify services |
+| [STATUS.md](docs/STATUS.md) | **Current status, inventory, tasks** - Everything you need |
+| [CREDENTIALS.md](docs/CREDENTIALS.md) | **Login credentials** - All service logins |
+| [REFERENCE.md](docs/REFERENCE.md) | **Architecture, rules, deployment** - Complete reference |
 
 ---
 
 ## 🔧 Common Tasks
 
 ### Deploy New Service
-1. Check available containers: `cat docs/CONTAINER_INVENTORY.md`
-2. Find script: `ls scripts/*deploy*`
+1. Check available containers: `cat docs/STATUS.md`
+2. Find script: `ls scripts/*deploy*` or see `docs/REFERENCE.md`
 3. Run: `bash scripts/XX_deploy_shared_SERVICE_native.sh`
-4. Update status: Edit `docs/CURRENT_STATUS.md`
+4. Update status: Edit `docs/STATUS.md`
 
 ### Troubleshoot Service
 ```bash
@@ -181,7 +149,7 @@ bash scripts/XX_deploy_shared_SERVICE_native.sh --update
 
 ## 🎯 Next Steps
 
-See [docs/TASKS_REMAINING.md](docs/TASKS_REMAINING.md) for current priorities.
+See [docs/STATUS.md](docs/STATUS.md) → "CURRENT TASKS" for priorities.
 
 **Immediate:**
 1. Complete Langfuse & Flowise installations
@@ -195,7 +163,7 @@ See [docs/TASKS_REMAINING.md](docs/TASKS_REMAINING.md) for current priorities.
 
 ---
 
-**Total Scripts:** 76 deployment scripts
+**Total Scripts:** 91 deployment scripts
 **Total Containers:** 27 (18 working, 2 installing, 7 pending)
-**Documentation:** 14 essential files
+**Documentation:** 3 files only!
 **Last Updated:** 2025-12-31
