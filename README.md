@@ -1,243 +1,201 @@
-# Local AI Stack Deployment
+# Local AI Stack - Proxmox Infrastructure
+**Complete AI/LLM development environment on Debian 12 LXC containers**
 
-Complete enterprise AI infrastructure with **51 deployment scripts** for Debian 12.
+## 📊 Current Status: 18/27 Working (67%)
 
-## Infrastructure
+**Working Services:** 18 | **Installing:** 2 (Langfuse, Flowise) | **Not Deployed:** 7
 
-### Traefik Reverse Proxy (10.0.4.10)
+---
 
-**All services route through Traefik** for SSL/TLS certificates and domain routing.
+## 📁 Repository Structure
 
-**Configuration:**
-- Server: `10.0.4.10`
-- Dynamic configs: `/opt/traefik-stack/dynamic`
-- File naming: `205{last_octet}.yml` (e.g., 10.0.5.100 → `205100.yml`)
-- SSL/TLS: Automatic via Let's Encrypt
-- Configure all services: `bash 53_configure_traefik_routing.sh`
-
-**Example routing:**
-- `ollama.valuechainhackers.xyz` → `10.0.5.100:11434`
-- `qdrant.valuechainhackers.xyz` → `10.0.5.101:6333`
-- `grafana.valuechainhackers.xyz` → `10.0.5.122:3000`
-
-**Servers:**
-- **10.0.5.24** - AI Stack - `ai-24.valuechainhackers.xyz`
-- **10.0.5.26** - Nextcloud - `nextcloud.valuechainhackers.xyz`
-- **10.0.5.27** - Supabase - `supabase.valuechainhackers.xyz`
-
-## Architecture
-
-**⚠️ Important**: Services are deployed on DEDICATED IPs (10.0.5.100+), not all on 10.0.5.24! See [IP_ALLOCATION.md](IP_ALLOCATION.md)
-
-**Shared Infrastructure** (Deploy ONCE on 10.0.5.100-146):
-- ~30 truly shareable services: Ollama, Qdrant, PostgreSQL, Redis, MinIO, Gitea, etc.
-- One instance serves ALL users/teams
-- See [SHARED_SERVICES_LIMITATIONS.md](SHARED_SERVICES_LIMITATIONS.md)
-
-**Per-User/Team Services** (Deploy MULTIPLE on 10.0.5.200+):
-- AI Interfaces: Open WebUI, big-AGI, ChainForge, Kotaemon
-- Workflows: n8n (⚠️ free = 1 user), Flowise, Jupyter, code-server
-- Each user/team gets their own instance
-
-**Scalability:**
-- Shared services: Deploy once, connect from anywhere
-- Per-user services: Unlimited instances as needed
-- 10.0.5.24 is LEGACY deployment, new services go on dedicated IPs
-
-## Quick Start
-
-### All-in-One (Legacy - Simple)
-```bash
-bash 01_system_dependencies.sh
-bash 02_install_docker.sh ai-admin
-bash 08_minimal_ai_stack.sh ai-admin
+```
+InstallLocalAiPackage/
+├── README.md                    # This file
+├── scripts/                     # All deployment scripts (90+ scripts)
+│   ├── XX_deploy_shared_*.sh   # Service deployment scripts
+│   ├── XX_configure_*.sh       # Configuration scripts
+│   └── monitoring_*.sh         # Health check scripts
+├── docs/                        # Documentation (14 files)
+│   ├── CONTAINER_INVENTORY.md  # ⭐ Complete container listing
+│   ├── CURRENT_STATUS.md       # ⭐ Quick status table
+│   ├── TASKS_REMAINING.md      # ⭐ To-do list
+│   ├── WORKING_SERVICES_CREDENTIALS.md  # ⭐ Login credentials
+│   └── ...                     # Reference docs
+├── logs/                        # Health check & monitoring logs
+└── archive/                     # Old configs & historical files
 ```
 
-### Scalable (Recommended - Production)
+---
+
+## 🚀 Quick Start
+
+### View Status
 ```bash
-# 1. Base system
-bash 01_system_dependencies.sh
-bash 02_install_docker.sh ai-admin
-
-# 2. Deploy core shared services (once)
-bash 11_deploy_shared_ollama.sh
-bash 12_deploy_shared_qdrant.sh
-bash 13_deploy_shared_postgres.sh
-bash 14_deploy_shared_redis.sh
-
-# 3. Choose your AI interface(s)
-bash 15_deploy_openwebui_instance.sh webui1 3000  # Production chat
-bash 47_deploy_shared_big_agi.sh                   # Advanced features
-bash 46_deploy_shared_chainforge.sh                # Prompt engineering
-bash 48_deploy_shared_kotaemon.sh                  # Document QA
-
-# 4. Optional: Image generation
-bash 42_deploy_shared_comfyui.sh                   # Modern Stable Diffusion
-# bash 43_deploy_shared_automatic1111.sh           # Classic SD WebUI
-
-# 5. Optional: Enhanced audio
-bash 44_deploy_shared_faster_whisper.sh            # Better STT
-bash 45_deploy_shared_openedai_speech.sh           # Better TTS
+cat docs/CURRENT_STATUS.md              # Quick overview
+cat docs/CONTAINER_INVENTORY.md         # Full details
+cat docs/WORKING_SERVICES_CREDENTIALS.md  # Login info
 ```
 
-## Deployment Scripts
-
-**Base:**
-- `01_system_dependencies.sh` `02_install_docker.sh` `07_enablessh.sh`
-
-**Shared Services (AI/ML):**
-- `11` Ollama `12` Qdrant `13` PostgreSQL `14` Redis
-- `16` MinIO `17` SearXNG `18` Langfuse `19` Neo4j
-- `20` Jupyter `21` N8N `22` Flowise
-- `23` Tika `24` Docling `25` Whisper
-- `26` LibreTranslate `27` MCPO
-
-**Shared Services (Enterprise):**
-- `28` Gitea `29` Monitoring (Prometheus+Grafana+Loki)
-- `30` BookStack `31` Metabase `32` Playwright
-- `33` code-server `34` Portainer `35` Formbricks
-
-**Shared Services (Communication & Auth):**
-- `36` Mailcow `37` EspoCRM `38` Matrix+Element
-- `39` Apache Superset `40` DuckDB `41` Authentik
-
-**Shared Services (Image Generation & A/V):**
-- `42` ComfyUI `43` AUTOMATIC1111
-- `44` faster-whisper `45` openedai-speech
-
-**Shared Services (LLM Tools):**
-- `46` ChainForge (prompt engineering & LLM evaluation)
-- `47` big-AGI (advanced multi-model AI interface)
-- `48` Kotaemon (RAG document QA system)
-
-**AI Interfaces:**
-- `08` All-in-one stack (legacy)
-- `15` Open WebUI instance (scalable)
-- `46` ChainForge (prompt engineering)
-- `47` big-AGI (advanced multi-model)
-- `48` Kotaemon (document QA)
-
-**Cloud:**
-- `09` Nextcloud `10` Supabase
-
-**Network Configuration:**
-- `50` Layer 2 network setup
-- `51` Pin Docker version
-
-**Utilities:**
-- `99` Docker cleanup
-
-**Update any service:** `bash script.sh --update`
-
-## Post-Deployment
-
-### Access Your AI Interfaces
-
-**Open WebUI:**
-- URL: `https://ai-24.valuechainhackers.xyz` (or `http://10.0.5.24:3000`)
-- Configure Pipelines: Admin Panel → Settings → Connections
-  - Add: `http://pipelines:9099` / `0p3n-w3bu!`
-
-**big-AGI:**
-- URL: `http://10.0.5.24:3012`
-- Ollama auto-configured (uses `host.docker.internal:11434`)
-
-**ChainForge:**
-- URL: `http://10.0.5.24:8002`
-- Ollama auto-configured (uses `host.docker.internal:11434`)
-
-**Kotaemon:**
-- URL: `http://10.0.5.24:7860`
-- Ollama auto-configured (uses `host.docker.internal:11434`)
-- Upload documents and ask questions with RAG
-
-### Pull Ollama Models
-
+### Deploy a Service
 ```bash
-# For all-in-one stack
-docker exec -it minimal-ai-ollama ollama pull qwen2.5:3b
-docker exec -it minimal-ai-ollama ollama pull nomic-embed-text
+# Example: Deploy JupyterLab to container 124
+bash scripts/38_deploy_shared_jupyter_native.sh
 
-# For native Ollama installation
-ollama pull qwen2.5:3b
-ollama pull nomic-embed-text
+# Example: Deploy Elasticsearch to new container 127
+bash scripts/40_deploy_shared_elasticsearch_native.sh
 ```
 
-### Maintenance
-
-**Update services:**
+### Check Service Health
 ```bash
-bash 11_deploy_shared_ollama.sh --update
-bash 47_deploy_shared_big_agi.sh --update
-# etc.
+# Quick check all working services
+for ip in 100 101 104 105 107 109 112 113 114 116 117 118 121 122 123; do
+  echo -n "10.0.5.$ip: "
+  timeout 2 curl -s http://10.0.5.$ip 2>&1 | head -1
+done
+
+# Check specific service logs
+ssh root@10.0.5.XXX "journalctl -u <service> -f"
 ```
 
-**Clean up disk space:**
+---
+
+## 🏗️ Infrastructure Overview
+
+### Network Architecture
+- **Shared Services:** 10.0.5.100-199 (Native deployments, NO Docker)
+- **User Containers:** 10.0.5.200-249 (Docker allowed)
+- **Traefik Proxy:** 10.0.4.10 (SSL/TLS routing)
+
+### Core Services (Always Running)
+| Service | IP | Port | Purpose |
+|---|---|---|---|
+| Ollama | 10.0.5.100 | 11434 | LLM inference |
+| Qdrant | 10.0.5.101 | 6333 | Vector database |
+| PostgreSQL | 10.0.5.102 | 5432 | Relational database |
+| Redis | 10.0.5.103 | 6379 | Cache |
+| MinIO | 10.0.5.104 | 9001 | Object storage |
+| Neo4j | 10.0.5.107 | 7474 | Graph database |
+
+### AI/LLM Services
+| Service | IP | Port | Status |
+|---|---|---|---|
+| Langfuse | 10.0.5.106 | 3000 | 🔧 Installing |
+| Flowise | 10.0.5.110 | 3000 | 🔧 Installing |
+| n8n | 10.0.5.109 | 5678 | ✅ Working |
+| SearXNG | 10.0.5.105 | 8080 | ✅ Working |
+| Docling | 10.0.5.112 | 5001 | ✅ Working |
+| LibreTranslate | 10.0.5.114 | 5000 | ✅ Working |
+| Whisper | 10.0.5.113 | 9000 | ✅ Working |
+
+### Monitoring Stack
+| Service | IP | Port |
+|---|---|---|
+| Prometheus | 10.0.5.121 | 9090 |
+| Grafana | 10.0.5.122 | 3000 |
+| Loki | 10.0.5.123 | 3100 |
+
+**Full inventory:** See [docs/CONTAINER_INVENTORY.md](docs/CONTAINER_INVENTORY.md)
+
+---
+
+## 📋 Available Deployment Scripts
+
+### Ready to Deploy (Existing Containers)
 ```bash
-bash 99_cleanup_docker.sh              # Safe cleanup
-bash 99_cleanup_docker.sh --aggressive # Remove all unused images/volumes
+scripts/38_deploy_shared_jupyter_native.sh    # JupyterLab → 124
+scripts/34_deploy_shared_tika.sh              # Tika → 111
+scripts/32_deploy_shared_gitea.sh             # Gitea → 120
 ```
 
-## AI Interface Comparison
-
-| Feature | Open WebUI | big-AGI | ChainForge | Kotaemon |
-|---------|------------|---------|------------|----------|
-| **Best For** | Production chat | Power users | Prompt engineering | Document QA |
-| **Multi-Model** | Switch models | Use simultaneously | Compare side-by-side | Switch models |
-| **RAG** | ✅ Built-in | ✅ Supported | ❌ | ✅ Primary focus |
-| **Document Upload** | ✅ | ⚠️ Limited | ❌ | ✅ Advanced |
-| **Pipelines** | ✅ Plugin system | ❌ | ❌ | ❌ |
-| **Personas** | ⚠️ Basic | ✅ Advanced | ❌ | ❌ |
-| **Beam Search** | ❌ | ✅ | ✅ | ❌ |
-| **Flow Programming** | ❌ | ❌ | ✅ Visual | ❌ |
-| **Voice I/O** | ✅ | ✅ | ❌ | ❌ |
-| **Image Gen** | ✅ Via pipelines | ⚠️ Limited | ❌ | ❌ |
-| **Evaluation** | ❌ | ⚠️ Basic | ✅ Advanced | ❌ |
-| **Citations** | ⚠️ Basic | ❌ | ❌ | ✅ Advanced |
-| **Deployment** | Multiple instances | Single shared | Single shared | Single shared |
-
-## Documentation
-
-- **[SERVICE_CATALOG.md](SERVICE_CATALOG.md)** - 📖 Detailed catalog of all 51 scripts (ports, updates, features)
-- **[SHARED_SERVICES_LIMITATIONS.md](SHARED_SERVICES_LIMITATIONS.md)** - ⚠️ **Which services to share vs deploy per-user**
-- **[IP_ALLOCATION.md](IP_ALLOCATION.md)** - 🌐 Network architecture & dedicated IP assignments
-- **[DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)** - 📊 Complete infrastructure overview
-- **[SERVICES_REFERENCE.md](SERVICES_REFERENCE.md)** - 🔗 Service inventory & connection URLs
-- **[AUTHENTICATION_STRATEGY.md](AUTHENTICATION_STRATEGY.md)** - 🔐 Auth & SSO strategy
-- [SCALING_GUIDE.md](SCALING_GUIDE.md) - Architecture patterns
-- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Step-by-step instructions
-- [ENV-REFERENCE.md](ENV-REFERENCE.md) - Environment variables
-
-## Service Count
-
-- **51 deployment scripts** (01-48, 50-51, 99)
-- **~30 truly shareable services** (deploy once on 10.0.5.100-146)
-- **~21 per-user/team services** (deploy multiple on 10.0.5.200+)
-- **4 AI interface options**
-- **All support `--update` flag**
-
-**⚠️ Critical**: Read [SHARED_SERVICES_LIMITATIONS.md](SHARED_SERVICES_LIMITATIONS.md) before deploying!
-
-## Layer 2 Networking (Advanced)
-
-For production deployments where Open WebUI instances need Layer 2 bridge networking:
-
+### New Services (Need New Containers)
 ```bash
-# 1. Pin Docker to stable version (prevents breaking changes)
-bash 51_pin_docker_version.sh 24.0.7
-
-# 2. Configure Layer 2 macvlan network
-bash 50_configure_layer2_network.sh ens18
-
-# 3. Deploy Open WebUI on Layer 2 (gets IP from DHCP)
-bash /root/deploy_openwebui_layer2.sh webui1 10.0.5.200
-bash /root/deploy_openwebui_layer2.sh webui2 10.0.5.201
+scripts/40_deploy_shared_elasticsearch_native.sh   # Elasticsearch → 127
+scripts/39_deploy_shared_litellm_native.sh         # LiteLLM → 128
+scripts/41_deploy_shared_unstructured_native.sh    # Unstructured → 129
+scripts/43_deploy_shared_superset_native.sh        # Superset → 130
+scripts/42_deploy_shared_haystack_native.sh        # Haystack → 131
+scripts/44_deploy_shared_langgraph_native.sh       # LangGraph → 132
+scripts/45_deploy_shared_graphrag_native.sh        # GraphRAG → 133
+scripts/46_deploy_shared_plaso_native.sh           # Plaso → 135
+scripts/47_deploy_shared_volatility3_native.sh     # Volatility3 → 138
 ```
 
-**Benefits:**
-- Containers get IPs from physical network DHCP
-- Avoids Docker networking issues
-- Stable with older Docker versions
-- Direct Layer 2 connectivity
+**Full script list:** See [docs/NATIVE_SCRIPTS_SUMMARY.md](docs/NATIVE_SCRIPTS_SUMMARY.md)
 
-See [IP_ALLOCATION.md](IP_ALLOCATION.md) for recommended IP ranges.
+---
+
+## 🎯 Key Principles
+
+1. **NO Docker on shared services (100-199)** - Native deployments only
+2. **All services use systemd** - Consistent management
+3. **Credentials in `/root/.credentials/`** - Centralized storage
+4. **Health checks required** - All deployments must verify
+5. **Traefik routing** - All external access through reverse proxy
+
+**Details:** See [docs/ARCHITECTURE_RULES.md](docs/ARCHITECTURE_RULES.md)
+
+---
+
+## 📖 Documentation
+
+| File | Purpose |
+|---|---|
+| [DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md) | Navigation guide |
+| [CONTAINER_INVENTORY.md](docs/CONTAINER_INVENTORY.md) | Complete container listing |
+| [CURRENT_STATUS.md](docs/CURRENT_STATUS.md) | Service status table |
+| [TASKS_REMAINING.md](docs/TASKS_REMAINING.md) | To-do list |
+| [WORKING_SERVICES_CREDENTIALS.md](docs/WORKING_SERVICES_CREDENTIALS.md) | Login credentials |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture |
+| [HEALTH_CHECK_GUIDE.md](docs/HEALTH_CHECK_GUIDE.md) | How to verify services |
+
+---
+
+## 🔧 Common Tasks
+
+### Deploy New Service
+1. Check available containers: `cat docs/CONTAINER_INVENTORY.md`
+2. Find script: `ls scripts/*deploy*`
+3. Run: `bash scripts/XX_deploy_shared_SERVICE_native.sh`
+4. Update status: Edit `docs/CURRENT_STATUS.md`
+
+### Troubleshoot Service
+```bash
+# Check logs
+ssh root@10.0.5.XXX "journalctl -u <service> -f"
+
+# Check status
+ssh root@10.0.5.XXX "systemctl status <service>"
+
+# Get credentials
+cat /root/.credentials/<service>.txt
+```
+
+### Update Service
+```bash
+# Most scripts support --update flag
+bash scripts/XX_deploy_shared_SERVICE_native.sh --update
+```
+
+---
+
+## 🎯 Next Steps
+
+See [docs/TASKS_REMAINING.md](docs/TASKS_REMAINING.md) for current priorities.
+
+**Immediate:**
+1. Complete Langfuse & Flowise installations
+2. Deploy JupyterLab to container 124
+3. Deploy Tika & Gitea
+
+**Planned:**
+- Elasticsearch, LiteLLM, Unstructured.io, Superset
+- Advanced RAG: Haystack, LangGraph, GraphRAG
+- Forensics: Plaso, Volatility3
+
+---
+
+**Total Scripts:** 76 deployment scripts
+**Total Containers:** 27 (18 working, 2 installing, 7 pending)
+**Documentation:** 14 essential files
+**Last Updated:** 2025-12-31
